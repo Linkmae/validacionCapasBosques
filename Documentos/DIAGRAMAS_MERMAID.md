@@ -539,12 +539,6 @@ erDiagram
         varchar fuente
         date fecha_actualizacion
     }
-
-    %% Notas de cardinalidad
-    note right of saf_validation_layers : 1 ────● N<br/>Una capa → Múltiples reglas
-    note right of saf_validation_rules : 1 ────● N<br/>Una regla → Múltiples umbrales
-    note right of saf_request_logs : 1 ────● N<br/>Una solicitud → Múltiples logs
-    note right of mae_areas_conservacion : N ────● M<br/>Múltiples predios ↔ Una área
 ```
 
 ---
