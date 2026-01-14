@@ -544,7 +544,7 @@ graph TB
     subgraph "JBoss EAP 7.4"
         subgraph "WAR - SAF Verification Service"
             subgraph "Capa de Presentacion"
-                SOAP_WS[VerificationService<br/>@WebService<br/>@Stateless EJB]
+                SOAP_WS[VerificationService SOAP WebService]
             end
 
             subgraph "Capa de Negocio"
@@ -835,14 +835,8 @@ classDiagram
     PrediosClient ..> GetPrediosResponse : recibe
 
     %% Interfaces externas
-    VerificationService ..|> "WebService" : implements
-    VerificationService ..|> "Stateless" : implements
-
-    %% Notas
-    note for VerificationService : Servicio Web SOAP principal\n@Stateless EJB con inyección de DataSources
-    note for DatabaseManager : Gestiona conexiones JDBC\nPostGIS y operaciones de logging
-    note for LayerValidationConfig : Sistema de caché con TTL\nCarga reglas desde BD
-    note for PrediosClient : Cliente SOAP para servicio externo\nde datos de predios
+    VerificationService ..|> WebService : implements
+    VerificationService ..|> Stateless : implements
 ```
 
 ---
