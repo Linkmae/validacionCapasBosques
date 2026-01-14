@@ -86,24 +86,24 @@ flowchart TD
 ```mermaid
 erDiagram
     %% Entidades principales
-    PREDIO ||--o{ PREDIO_VERIFICACION : tiene
-    PREDIO_VERIFICACION ||--o{ RESULTADO_CAPA : contiene
-    PREDIO_VERIFICACION ||--|| RESUMEN : genera
+    PREDIO ||--o{ PREDIO_VERIFICACION
+    PREDIO_VERIFICACION ||--o{ RESULTADO_CAPA
+    PREDIO_VERIFICACION ||--|| RESUMEN
 
     %% Entidades de configuración
-    CAPA_VALIDACION ||--o{ REGLA_VALIDACION : define
-    REGLA_VALIDACION ||--o{ UMBRAL_TAMANIO : tiene
+    CAPA_VALIDACION ||--o{ REGLA_VALIDACION
+    REGLA_VALIDACION ||--o{ UMBRAL_TAMANIO
 
     %% Entidades de auditoría
-    SOLICITUD ||--o{ LOG_PREDIO : genera
-    SOLICITUD ||--|| LOG_ERROR : puede-generar
+    SOLICITUD ||--o{ LOG_PREDIO
+    SOLICITUD ||--o| LOG_ERROR
 
     %% Entidades externas
-    PREDIO ||--|| PROPIETARIO : pertenece-a
-    PREDIO ||--|| UBICACION_GEOGRAFICA : esta-en
+    PREDIO ||--|| PROPIETARIO
+    PREDIO ||--|| UBICACION_GEOGRAFICA
 
     %% Relaciones con capas geográficas
-    RESULTADO_CAPA ||--|| CAPA_GEOGRAFICA : valida-contra
+    RESULTADO_CAPA ||--|| CAPA_GEOGRAFICA
 
     %% Detalles de entidades
     PREDIO {
