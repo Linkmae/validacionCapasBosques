@@ -921,5 +921,4 @@ Los diagramas Mermaid se pueden integrar directamente en:
 Para soporte técnico, consultar:
 - `MANUAL_PROGRAMADOR.md`: Detalles de implementación
 - `MANUAL_INSTALACION.md`: Guía de instalación
-- `DICCIONARIO_DATOS_SAF.md`: Especificaciones de datos</content>
-<parameter name="filePath">/home/linkmaedev/Proyecto_Interconeccion/SAF_Services/Documentos/DIAGRAMAS_MERMAID.md
+- `DICCIONARIO_DATOS_SAF.md`: Especificaciones de datos
