@@ -372,10 +372,10 @@ erDiagram
     }
 
     %% Relaciones
-    saf_validation_rules ||--o{ saf_validation_thresholds : "1..*"
-    saf_validation_layers ||--o{ saf_validation_rules : "1..*"
-    saf_request_logs ||--o{ saf_predio_logs : "1..*"
-    saf_request_logs ||--o{ saf_error_logs : "1..*"
+    saf_validation_rules ||--o{ saf_validation_thresholds
+    saf_validation_layers ||--o{ saf_validation_rules
+    saf_request_logs ||--o{ saf_predio_logs
+    saf_request_logs ||--o{ saf_error_logs
 ```
 
 ---
