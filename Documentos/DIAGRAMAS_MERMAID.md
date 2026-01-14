@@ -607,7 +607,6 @@ graph TB
     classDef internal fill:#fce4ec,stroke:#880e4f,stroke-width:2px
 
     class SOAP_Client,MAE_Service external
-    class JBoss EAP 7.4 server
     class SOAP_WS,ConfigMgr,PrediosClient,ValidationEngine,DB_Manager,LayerConfig component
     class LogsDB,PostGISDB database
     class Cache,Logging,ErrorHandler internal
