@@ -86,24 +86,24 @@ flowchart TD
 ```mermaid
 erDiagram
     %% Entidades principales
-    PREDIO ||--o{ PREDIO_VERIFICACION
-    PREDIO_VERIFICACION ||--o{ RESULTADO_CAPA
-    PREDIO_VERIFICACION ||--|| RESUMEN
+    PREDIO ||--o{ PREDIO_VERIFICACION : ""
+    PREDIO_VERIFICACION ||--o{ RESULTADO_CAPA : ""
+    PREDIO_VERIFICACION ||--|| RESUMEN : ""
 
     %% Entidades de configuración
-    CAPA_VALIDACION ||--o{ REGLA_VALIDACION
-    REGLA_VALIDACION ||--o{ UMBRAL_TAMANIO
+    CAPA_VALIDACION ||--o{ REGLA_VALIDACION : ""
+    REGLA_VALIDACION ||--o{ UMBRAL_TAMANIO : ""
 
     %% Entidades de auditoría
-    SOLICITUD ||--o{ LOG_PREDIO
-    SOLICITUD ||--o| LOG_ERROR
+    SOLICITUD ||--o{ LOG_PREDIO : ""
+    SOLICITUD ||--o| LOG_ERROR : ""
 
     %% Entidades externas
-    PREDIO ||--|| PROPIETARIO
-    PREDIO ||--|| UBICACION_GEOGRAFICA
+    PREDIO ||--|| PROPIETARIO : ""
+    PREDIO ||--|| UBICACION_GEOGRAFICA : ""
 
     %% Relaciones con capas geográficas
-    RESULTADO_CAPA ||--|| CAPA_GEOGRAFICA
+    RESULTADO_CAPA ||--|| CAPA_GEOGRAFICA : ""
 
     %% Detalles de entidades
     PREDIO {
@@ -372,10 +372,10 @@ erDiagram
     }
 
     %% Relaciones
-    saf_validation_rules ||--o{ saf_validation_thresholds
-    saf_validation_layers ||--o{ saf_validation_rules
-    saf_request_logs ||--o{ saf_predio_logs
-    saf_request_logs ||--o{ saf_error_logs
+    saf_validation_rules ||--o{ saf_validation_thresholds : ""
+    saf_validation_layers ||--o{ saf_validation_rules : ""
+    saf_request_logs ||--o{ saf_predio_logs : ""
+    saf_request_logs ||--o{ saf_error_logs : ""
 ```
 
 ---
@@ -385,27 +385,27 @@ erDiagram
 ```mermaid
 erDiagram
     %% Relaciones principales con cardinalidad
-    saf_validation_layers ||--o{ saf_validation_rules
-    saf_validation_rules ||--o{ saf_validation_thresholds
+    saf_validation_layers ||--o{ saf_validation_rules : ""
+    saf_validation_rules ||--o{ saf_validation_thresholds : ""
 
-    saf_request_logs ||--o{ saf_predio_logs
-    saf_request_logs ||--o{ saf_error_logs
+    saf_request_logs ||--o{ saf_predio_logs : ""
+    saf_request_logs ||--o{ saf_error_logs : ""
 
     %% Relaciones de configuración
-    config_parameters ||--o| saf_request_logs
+    config_parameters ||--o| saf_request_logs : ""
 
     %% Relaciones con datos del MAE (vistas)
-    mae_areas_conservacion o--o{ saf_predio_logs
-    mae_areas_conservacion o--o{ saf_validation_rules
+    mae_areas_conservacion o--o{ saf_predio_logs : ""
+    mae_areas_conservacion o--o{ saf_validation_rules : ""
 
-    mae_bosque_no_bosque o--o{ saf_predio_logs
-    mae_bosque_no_bosque o--o{ saf_validation_rules
+    mae_bosque_no_bosque o--o{ saf_predio_logs : ""
+    mae_bosque_no_bosque o--o{ saf_validation_rules : ""
 
-    mae_uso_suelo_agricola o--o{ saf_predio_logs
-    mae_uso_suelo_agricola o--o{ saf_validation_rules
+    mae_uso_suelo_agricola o--o{ saf_predio_logs : ""
+    mae_uso_suelo_agricola o--o{ saf_validation_rules : ""
 
-    mae_rios_principales o--o{ saf_predio_logs
-    mae_rios_principales o--o{ saf_validation_rules
+    mae_rios_principales o--o{ saf_predio_logs : ""
+    mae_rios_principales o--o{ saf_validation_rules : ""
 
     %% Detalles de cardinalidad
     saf_validation_layers {
