@@ -385,8 +385,8 @@ erDiagram
 ```mermaid
 erDiagram
     %% Relaciones principales con cardinalidad
-    saf_validation_layers ||--o{ saf_validation_rules : "1:N\nUna capa puede tener\nmúltiples reglas"
-    saf_validation_rules ||--o{ saf_validation_thresholds : "1:N\nUna regla puede tener\numbrales escalonados"
+    saf_validation_layers ||--o{ saf_validation_rules
+    saf_validation_rules ||--o{ saf_validation_thresholds
 
     saf_request_logs ||--o{ saf_predio_logs
     saf_request_logs ||--o{ saf_error_logs
