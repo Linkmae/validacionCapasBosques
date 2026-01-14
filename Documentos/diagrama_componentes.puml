@@ -1,0 +1,118 @@
+@startuml Diagrama de Componentes - Arquitectura SAF
+
+!define RECTANGLE class
+
+' === COMPONENTES EXTERNOS ===
+rectangle "Servicio SOAP\nPredios MAE" as PrediosService #LightBlue {
+    portin "SOAP/HTTP" as PrediosPort
+    note right : Servicio externo\nProporciona datos\nde predios
+}
+
+rectangle "Base de Datos\nPostgreSQL + PostGIS" as PostGISDB #LightGreen {
+    portin "JDBC" as JDBCLogs
+    portin "JDBC" as JDBCCapas
+    note right : saf_interconexion\nsaf_postgis
+}
+
+rectangle "JBoss EAP 7.4\nApplication Server" as JBoss #LightYellow {
+    portin "HTTP/SOAP" as SOAPPort
+    portin "JNDI" as JNDIPort
+    note right : Servidor de aplicaciones\nGestiona DataSources
+}
+
+' === COMPONENTE PRINCIPAL ===
+rectangle "SAF Verification Service\n(WAR)" as SAFService #LightCoral {
+
+    ' === CAPA DE PRESENTACIÓN ===
+    rectangle "SOAP Web Service\n(VerificationService)" as SOAPLayer #White {
+        note right : @WebService\n@Stateless EJB
+    }
+
+    ' === CAPA DE NEGOCIO ===
+    rectangle "Business Logic" as BusinessLayer #White {
+        rectangle "ConfigManager" as ConfigMgr
+        rectangle "PrediosClient" as PrediosClient
+        rectangle "Validation Engine" as ValidationEngine
+    }
+
+    ' === CAPA DE DATOS ===
+    rectangle "Data Access Layer" as DataLayer #White {
+        rectangle "DatabaseManager" as DBManager
+        rectangle "LayerValidationConfig" as LayerConfig
+    }
+
+    ' === COMPONENTES INTERNOS ===
+    rectangle "Cache System" as Cache #White {
+        note right : Reglas de validación\nTTL: 5 minutos
+    }
+
+    rectangle "Logging System" as Logging #White {
+        note right : Auditoría de requests\nLogs de errores
+    }
+
+    rectangle "Error Handler" as ErrorHandler #White {
+        note right : Manejo de excepciones\nRespuestas de error
+    }
+}
+
+' === CLIENTES ===
+rectangle "Cliente SOAP\n(Sistema EUDR)" as SOAPClient #LightGray {
+    portout "SOAP Request" as ClientRequest
+    note right : Sistema que consume\nel servicio de validación
+}
+
+' === CONEXIONES INTERNAS ===
+SOAPLayer --> BusinessLayer : invoca
+BusinessLayer --> DataLayer : consulta
+DataLayer --> Cache : usa
+DataLayer --> Logging : registra
+BusinessLayer --> ErrorHandler : maneja errores
+
+ConfigMgr --> Cache : actualiza
+PrediosClient --> Cache : configura
+ValidationEngine --> Cache : consulta reglas
+
+DBManager --> Logging : registra operaciones
+DBManager --> ErrorHandler : reporta errores
+
+' === CONEXIONES EXTERNAS ===
+SOAPClient --> SOAPPort : SOAP/HTTP
+SOAPLayer --> SOAPPort : expone servicio
+
+SAFService --> JNDIPort : obtiene DataSources
+DBManager --> JDBCLogs : saf_interconexion
+DBManager --> JDBCCapas : saf_postgis
+
+PrediosClient --> PrediosPort : consulta predios
+
+' === FLUJO DE DATOS ===
+ClientRequest --> SOAPLayer : 1. Request SOAP
+SOAPLayer --> PrediosClient : 2. Consulta predios
+PrediosClient --> PrediosPort : 3. SOAP externo
+PrediosPort --> PrediosClient : 4. Respuesta predios
+PrediosClient --> ValidationEngine : 5. Validación
+ValidationEngine --> DBManager : 6. Consulta PostGIS
+DBManager --> JDBCCapas : 7. SQL PostGIS
+JDBCCapas --> DBManager : 8. Resultados
+ValidationEngine --> DBManager : 9. Logging
+DBManager --> JDBCLogs : 10. INSERT logs
+ValidationEngine --> SOAPLayer : 11. Resultados
+SOAPLayer --> ClientRequest : 12. Response SOAP
+
+' === DEPLOYMENT ===
+JBoss ..> SAFService : contiene
+JBoss ..> PostGISDB : configura conexión
+
+' === LEGEND ===
+legend right
+    |= Tipo |= Color |
+    | Componente Externo | #LightBlue |
+    | Base de Datos | #LightGreen |
+    | Servidor | #LightYellow |
+    | Componente Principal | #LightCoral |
+    | Subcomponente | #White |
+    | Cliente | #LightGray |
+endlegend
+
+@enduml</content>
+<parameter name="filePath">/home/linkmaedev/Proyecto_Interconeccion/SAF_Services/Documentos/diagrama_componentes.puml

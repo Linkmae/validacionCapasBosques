@@ -1,0 +1,146 @@
+---
+title: Modelo Lógico de Datos - Sistema SAF
+---
+
+erDiagram
+    %% Entidades principales
+    PREDIO ||--o{ PREDIO_VERIFICACION : tiene
+    PREDIO_VERIFICACION ||--o{ RESULTADO_CAPA : contiene
+    PREDIO_VERIFICACION ||--|| RESUMEN : genera
+
+    %% Entidades de configuración
+    CAPA_VALIDACION ||--o{ REGLA_VALIDACION : define
+    REGLA_VALIDACION ||--o{ UMBRAL_TAMANIO : tiene
+
+    %% Entidades de auditoría
+    SOLICITUD ||--o{ LOG_PREDIO : genera
+    SOLICITUD ||--|| LOG_ERROR : puede-generar
+
+    %% Entidades externas
+    PREDIO ||--|| PROPIETARIO : pertenece-a
+    PREDIO ||--|| UBICACION_GEOGRAFICA : esta-en
+
+    %% Relaciones con capas geográficas
+    RESULTADO_CAPA ||--|| CAPA_GEOGRAFICA : valida-contra
+
+    %% Detalles de entidades
+    PREDIO {
+        string id_predio PK
+        string codigo_predio
+        string cedula_propietario
+        string nombre_propietario
+        number area_hectareas
+        geometry geometria
+        string srid
+    }
+
+    PREDIO_VERIFICACION {
+        string id_predio FK
+        string tipo_validacion
+        boolean validacion_paso
+        string mensaje_validacion
+        datetime fecha_verificacion
+    }
+
+    RESULTADO_CAPA {
+        string id_capa FK
+        string nombre_capa
+        boolean intersecta
+        number area_interseccion_m2
+        number porcentaje_interseccion
+        boolean validacion_paso
+        string mensaje_validacion
+    }
+
+    RESUMEN {
+        number total_predios
+        number predios_con_intersecciones
+        number total_capas_verificadas
+        number capas_con_intersecciones
+        boolean validacion_general
+        string mensaje_general
+    }
+
+    CAPA_VALIDACION {
+        string id_capa PK
+        string nombre_capa
+        string tipo_capa
+        boolean activa
+        string descripcion
+    }
+
+    REGLA_VALIDACION {
+        string id_regla PK
+        string id_capa FK
+        string tipo_validacion
+        number porcentaje_maximo
+        string mensaje_error
+        string mensaje_exito
+    }
+
+    UMBRAL_TAMANIO {
+        string id_umbral PK
+        string id_regla FK
+        number tamano_minimo_ha
+        number tamano_maximo_ha
+        number porcentaje_maximo
+        string descripcion
+    }
+
+    SOLICITUD {
+        string id_solicitud PK
+        string tipo_identificador
+        string valor_identificador
+        string tipo_validacion
+        datetime fecha_solicitud
+        string estado
+        string ip_cliente
+    }
+
+    LOG_PREDIO {
+        string id_log PK
+        string id_solicitud FK
+        string id_predio
+        string detalle_procesamiento
+        datetime fecha_log
+    }
+
+    LOG_ERROR {
+        string id_error PK
+        string id_solicitud FK
+        string tipo_error
+        string mensaje_error
+        string detalle_error
+        datetime fecha_error
+    }
+
+    PROPIETARIO {
+        string cedula PK
+        string nombre_completo
+        string tipo_persona
+        string email
+        string telefono
+    }
+
+    UBICACION_GEOGRAFICA {
+        string id_ubicacion PK
+        string provincia
+        string canton
+        string parroquia
+        geometry centroide
+    }
+
+    CAPA_GEOGRAFICA {
+        string id_capa PK
+        string nombre_capa
+        string tipo_geometria
+        geometry geometria_capa
+        string fuente_datos
+        datetime fecha_actualizacion    }
+
+    %% Relaciones
+    PREDIO ||--o{ VALIDACION : "tiene"
+    PREDIO ||--|| UBICACION_GEOGRAFICA : "tiene"
+    PREDIO }o--|| TITULAR : "pertenece_a"
+    VALIDACION }o--|| REGLA_VALIDACION : "aplica"
+    VALIDACION }o--o{ CAPA_GEOGRAFICA : "intersecta"

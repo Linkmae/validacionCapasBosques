@@ -1,0 +1,199 @@
+@startuml Diagrama de Clases - SAF Verification Service
+
+package "com.saf.verification" as SAF {
+
+    ' === CLASES PRINCIPALES ===
+    class VerificationService {
+        -logsDS: DataSource
+        -capasDS: DataSource
+        -configManager: ConfigManager
+        -prediosClient: PrediosClient
+        -dbManager: DatabaseManager
+        --
+        +verifyPrediosByIdentifier(request): VerifyPrediosByIdentifierResponse
+        -processPredio(predio, type, layers): PredioVerification
+        -calculateIntersectionWithValidation(predio, rule): LayerResult
+        -createSummary(verifications): Summary
+    }
+
+    class DatabaseManager {
+        -logsDS: DataSource
+        -capasDS: DataSource
+        --
+        +logRequest(request, response): void
+        +logPredioDetails(requestId, verification): void
+        +calculateIntersection(predioWkt, capaTabla): Map<String,Object>
+        +getConfigValue(key): String
+        +getValidationLayers(): List<LayerValidationRule>
+        +getThresholdsBySize(layerId): List<ThresholdBySize>
+    }
+
+    class LayerValidationConfig {
+        -VALIDATION_RULES_CACHE: Map<String,List<LayerValidationRule>>
+        --
+        +getRulesForType(validationType): List<LayerValidationRule>
+        +loadRulesFromDatabase(): void
+        -ensureCacheLoaded(): void
+    }
+
+    class PrediosClient {
+        -serviceUrl: String
+        -username: String
+        -password: String
+        --
+        +getPredios(identifierType, identifierValue): GetPrediosResponse
+    }
+
+    ' === CLASES DE DATOS ===
+    class VerifyPrediosByIdentifierRequest {
+        -identifierType: String
+        -identifierValue: String
+        -verificationType: String
+        -layersToCheck: List<String>
+    }
+
+    class VerifyPrediosByIdentifierResponse {
+        -requestStatus: RequestStatus
+        -identifierEcho: String
+        -predioVerifications: List<PredioVerification>
+        -summary: Summary
+    }
+
+    class PredioVerification {
+        -predioId: String
+        -predioCodigo: String
+        -predioOwnerCedula: String
+        -predioOwnerName: String
+        -predioAreaM2: double
+        -predioSRID: int
+        -predioGeometryGeoJSON: String
+        -layersResults: List<LayerResult>
+    }
+
+    class LayerResult {
+        -layerId: String
+        -layerName: String
+        -wmsLayerName: String
+        -intersects: boolean
+        -intersectionAreaM2: double
+        -percentage: double
+        -intersectionGeoJSON: String
+        -validationPassed: boolean
+        -validationMessage: String
+        -maxAllowedPercentage: Double
+        -layerNotLoaded: boolean
+    }
+
+    class LayerValidationRule {
+        -layerName: String
+        -layerTableName: String
+        -schemaName: String
+        -validationType: String
+        -maxIntersectionPercentage: Double
+        -minIntersectionAreaM2: Double
+        -validationMessage: String
+        -layerVersion: String
+        -isActive: boolean
+        -zoneType: String
+        -messageApproved: String
+        -messageRejected: String
+        -thresholds: List<ThresholdBySize>
+    }
+
+    class ThresholdBySize {
+        -id: Integer
+        -minHectares: Double
+        -maxHectares: Double
+        -maxPercentage: Double
+        -description: String
+    }
+
+    ' === CLASES DE SOPORTE ===
+    class RequestStatus {
+        -code: String
+        -type: String
+        -message: String
+    }
+
+    class Summary {
+        -totalPredios: int
+        -prediosWithIntersections: int
+        -totalLayersChecked: int
+        -layersWithIntersections: int
+        -validationPassed: boolean
+        -validationMessage: String
+    }
+
+    class Predio {
+        -predioId: String
+        -predioCodigo: String
+        -identifier: String
+        -ownerName: String
+        -areaM2: double
+        -srid: int
+        -geometryWKT: String
+        -geometryGeoJSON: String
+    }
+
+    class ConfigManager {
+        -configCache: Map<String,String>
+        --
+        +getConfigValue(key): String
+        +refreshCache(): void
+    }
+
+    ' === CLASES DE INTEGRACIÓN ===
+    class GetPrediosRequest {
+        -identifierType: String
+        -identifierValue: String
+    }
+
+    class GetPrediosResponse {
+        -predios: List<Predio>
+        -status: String
+        -message: String
+    }
+
+    ' === RELACIONES ===
+    VerificationService --> DatabaseManager : usa
+    VerificationService --> LayerValidationConfig : consulta
+    VerificationService --> PrediosClient : invoca
+    VerificationService --> ConfigManager : configura
+
+    VerificationService ..> VerifyPrediosByIdentifierRequest : recibe
+    VerificationService ..> VerifyPrediosByIdentifierResponse : retorna
+
+    VerifyPrediosByIdentifierResponse --> RequestStatus : contiene
+    VerifyPrediosByIdentifierResponse --> Summary : contiene
+    VerifyPrediosByIdentifierResponse --> PredioVerification : contiene
+
+    PredioVerification --> LayerResult : contiene
+
+    LayerValidationRule --> ThresholdBySize : contiene
+
+    DatabaseManager --> LayerValidationRule : carga
+    DatabaseManager --> ThresholdBySize : carga
+
+    PrediosClient ..> GetPrediosRequest : envía
+    PrediosClient ..> GetPrediosResponse : recibe
+
+    GetPrediosResponse --> Predio : contiene
+
+    ' === NOTAS ===
+    note right of VerificationService : Servicio Web SOAP Principal\n@Stateless EJB\n@WebService
+    note right of DatabaseManager : Gestiona conexiones JDBC\nPostGIS y Logging
+    note right of LayerValidationConfig : Cache de reglas de validación\nTTL: 5 minutos
+    note right of PrediosClient : Cliente SOAP externo\nServicio de Predios
+}
+
+' === INTERFACES EXTERNAS ===
+interface "Servicio SOAP\nPredios" as PrediosSOAP
+interface "Base de Datos\nPostgreSQL/PostGIS" as PostGIS
+interface "JBoss EAP 7.4" as JBoss
+
+VerificationService ..> PrediosSOAP : SOAP/HTTP
+DatabaseManager ..> PostGIS : JDBC
+VerificationService ..> JBoss : JNDI DataSource
+
+@enduml</content>
+<parameter name="filePath">/home/linkmaedev/Proyecto_Interconeccion/SAF_Services/Documentos/diagrama_clases.puml

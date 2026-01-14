@@ -1,0 +1,95 @@
+---
+title: Diagrama de Casos de Uso - Sistema SAF
+---
+
+flowchart TB
+    %% Actores
+    Cliente[Cliente SOAP EUDR]
+    Admin[Administrador]
+    Sistema[Sistema MAE]
+    
+    %% Casos de uso principales
+    UC1((Verificar Predios<br/>por Identificador))
+    UC2((Validar Intersecciones<br/>con Capas))
+    UC3((Consultar Estado<br/>de Validación))
+    UC4((Obtener Información<br/>de Predio))
+    
+    %% Casos de uso de configuración
+    UC5((Gestionar Reglas<br/>de Validación))
+    UC6((Configurar Capas<br/>Geográficas))
+    UC7((Definir Umbrales<br/>por Tamaño))
+    UC8((Consultar Parámetros<br/>del Sistema))
+    
+    %% Casos de uso de auditoría
+    UC9((Registrar Logs<br/>de Solicitud))
+    UC10((Registrar Logs<br/>de Predio))
+    UC11((Registrar Errores))
+    UC12((Consultar Historial<br/>de Validaciones))
+    
+    %% Casos de uso de integración
+    UC13((Consumir Servicio<br/>Predios MAE))
+    UC14((Procesar Respuesta<br/>SOAP))
+    UC15((Manejar Errores<br/>de Servicio))
+    
+    %% Relaciones Cliente - Casos de Uso
+    Cliente -->|solicita| UC1
+    Cliente -->|consulta| UC3
+    Cliente -->|recibe| UC14
+    
+    %% Relaciones Administrador - Casos de Uso
+    Admin -->|configura| UC5
+    Admin -->|administra| UC6
+    Admin -->|define| UC7
+    Admin -->|gestiona| UC8
+    Admin -->|consulta| UC12
+    
+    %% Relaciones Sistema MAE - Casos de Uso
+    Sistema -->|provee datos| UC13
+    Sistema -->|responde| UC4
+    
+    %% Relaciones include entre casos de uso
+    UC1 -.->|include| UC2
+    UC1 -.->|include| UC4
+    UC1 -.->|include| UC9
+    UC1 -.->|include| UC14
+    
+    UC2 -.->|include| UC6
+    UC2 -.->|include| UC5
+    UC2 -.->|include| UC7
+    UC2 -.->|include| UC10
+    
+    UC4 -.->|include| UC13
+    
+    UC13 -.->|include| UC15
+    
+    %% Relaciones extend
+    UC11 -.->|extend| UC1
+    UC15 -.->|extend| UC13
+    
+    %% Agrupación por subsistemas
+    subgraph "Subsistema de Verificación"
+        UC1
+        UC2
+        UC3
+        UC4
+    end
+    
+    subgraph "Subsistema de Configuración"
+        UC5
+        UC6
+        UC7
+        UC8
+    end
+    
+    subgraph "Subsistema de Auditoría"
+        UC9
+        UC10
+        UC11
+        UC12
+    end
+    
+    subgraph "Subsistema de Integración"
+        UC13
+        UC14
+        UC15
+    end

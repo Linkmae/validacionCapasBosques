@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<webservices xmlns="http://www.jboss.com/xml/ns/javaee"
+             xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+             xsi:schemaLocation="http://www.jboss.com/xml/ns/javaee
+                                 http://www.jboss.org/schema/jbossws/jboss-webservices_1_3.xsd"
+             version="1.3">
+    <context-root>/saf-verification-service</context-root>
+    <webservice-description>
+        <webservice-description-name>VerificationService</webservice-description-name>
+        <wsdl-publish-location>file:${jboss.server.data.dir}/wsdl</wsdl-publish-location>
+    </webservice-description>
+</webservices>

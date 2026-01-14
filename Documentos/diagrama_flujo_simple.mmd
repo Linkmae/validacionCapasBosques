@@ -1,0 +1,20 @@
+flowchart TD
+    A[Cliente SOAP] --> B{Recibir Request}
+    B --> C[Validar parametros]
+    C --> D{Validos?}
+
+    D -->|No| E[Error 400]
+    D -->|Si| F[Inicializar servicios]
+
+    F --> G[Llamar servicio Predios]
+    G --> H{Exitoso?}
+
+    H -->|No| I[Error 503]
+    H -->|Si| J[Procesar predios]
+
+    J --> K[Crear respuesta]
+    K --> L[Retornar respuesta SOAP]
+
+    E --> M[Fin]
+    I --> M
+    L --> M

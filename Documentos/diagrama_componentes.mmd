@@ -1,0 +1,70 @@
+---
+title: Diagrama de Componentes - Arquitectura SAF
+---
+
+graph TB
+    %% Clientes externos
+    subgraph "Clientes Externos"
+        SOAP_Client[Cliente SOAP Sistema EUDR]
+        MAE_Service[Servicio SOAP Predios MAE]
+    end
+
+    %% Servidor de aplicaciones
+    subgraph "JBoss EAP 7.4"
+        subgraph "WAR SAF Verification Service"
+            subgraph "Capa de Presentacion"
+                SOAP_WS[VerificationService WebService Stateless EJB]
+            end
+
+            subgraph "Capa de Negocio"
+                ConfigMgr[ConfigManager<br/>Gestión de configuración]
+                PrediosClient[PrediosClient<br/>Cliente SOAP externo]
+                ValidationEngine[Validation Engine<br/>Motor de validación]
+            end
+
+            subgraph "Capa de Datos"
+                DB_Manager[DatabaseManager<br/>Gestión BD y logs]
+                LayerConfig[LayerValidationConfig<br/>Cache de reglas<br/>TTL: 5 min]
+            end
+
+            subgraph "Componentes Internos"
+                Cache[(Cache System<br/>Reglas de validación)]
+                Logging[(Logging System<br/>Auditoría)]
+                ErrorHandler[Error Handler<br/>Manejo de excepciones]
+            end
+        end
+    end
+
+    %% Bases de datos
+    subgraph "Bases de Datos"
+        subgraph "PostgreSQL - saf_interconexion"
+            LogsDB[(saf_request_logs<br/>saf_predio_logs<br/>saf_error_logs<br/>saf_validation_*<br/>config_parameters)]
+        end
+
+        subgraph "PostGIS - saf_postgis"
+            PostGISDB[(mae_areas_conservacion<br/>mae_bosque_no_bosque<br/>mae_uso_suelo_agricola<br/>mae_rios_principales<br/>...)]
+        end
+    end
+
+    %% Conexiones principales
+    SOAP_Client -->|SOAP/HTTP| SOAP_WS
+    SOAP_WS -->|Invoca| ValidationEngine
+    ValidationEngine -->|Consulta| ConfigMgr
+    ValidationEngine -->|Invoca| PrediosClient
+    ValidationEngine -->|Lee reglas| LayerConfig
+    ValidationEngine -->|Calcula intersecciones| DB_Manager
+
+    PrediosClient -->|SOAP/HTTP| MAE_Service
+
+    DB_Manager -->|JDBC| LogsDB
+    DB_Manager -->|JDBC| PostGISDB
+
+    LayerConfig -->|Lee configuración| LogsDB
+    ConfigMgr -->|Lee parámetros| LogsDB
+
+    %% Conexiones internas
+    ValidationEngine -.->|Actualiza| Cache
+    LayerConfig -.->|Usa| Cache
+    DB_Manager -.->|Registra| Logging
+    ValidationEngine -.->|Maneja| ErrorHandler
+

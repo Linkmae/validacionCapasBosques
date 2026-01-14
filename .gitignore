@@ -1,0 +1,84 @@
+# ============================================================================
+# .gitignore para Proyecto SAF Verification Service
+# ============================================================================
+
+# ============================
+# Maven / Java
+# ============================
+target/
+*.class
+*.jar
+*.war
+*.ear
+*.iml
+.classpath
+.project
+.settings/
+
+# ============================
+# IDEs
+# ============================
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# ============================
+# Logs
+# ============================
+*.log
+logs/
+*.log.*
+
+# ============================
+# Configuraciones Locales
+# ============================
+saf-verification-service/src/main/resources/verification.properties
+config.properties
+*-local.properties
+
+# Mantener solo el ejemplo
+!config-example.properties
+
+# ============================
+# Base de Datos Local
+# ============================
+*.sql.backup
+*.dump
+*.backup
+
+# ============================
+# Archivos de Prueba/Temporales
+# ============================
+casos_prueba*.txt
+casos_prueba*.csv
+test_data_*.sql
+test_*.xml
+generar_casos*.sh
+extraer_coordenadas*.sql
+cargar_geometrias_prueba.sql
+casos_prueba_output.txt
+
+# ============================
+# JBoss / WildFly
+# ============================
+standalone.xml
+domain.xml
+jboss-eap-*/
+
+# ============================
+# Sistema Operativo
+# ============================
+Thumbs.db
+Desktop.ini
+
+# ============================
+# Backups
+# ============================
+*.backup
+*~
+*.tar.gz
+Documentos/node_modules/
+*.png

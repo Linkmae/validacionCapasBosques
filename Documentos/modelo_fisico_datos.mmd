@@ -1,0 +1,153 @@
+---
+title: Modelo Físico de Datos - Base de Datos PostgreSQL
+---
+
+erDiagram
+    %% Base de datos saf_interconexion
+    saf_validation_layers {
+        integer id PK
+        varchar_255 layer_key UK
+        varchar_255 table_name
+        varchar_100 schema_name
+        varchar_255 layer_display_name
+        varchar_50 validation_type
+        boolean active "DEFAULT true"
+        timestamp created_at "DEFAULT CURRENT_TIMESTAMP"
+        timestamp updated_at "DEFAULT CURRENT_TIMESTAMP"
+    }
+
+    saf_validation_rules {
+        integer id PK
+        integer layer_id FK
+        varchar_50 validation_type
+        decimal_5_2 max_percentage
+        decimal_10_2 min_area_m2
+        text validation_message
+        varchar_255 layer_version
+        boolean is_active "DEFAULT true"
+        varchar_50 zone_type
+        text message_approved
+        text message_rejected
+        timestamp created_at "DEFAULT CURRENT_TIMESTAMP"
+    }
+
+    saf_validation_thresholds {
+        integer id PK
+        integer rule_id FK
+        decimal_10_2 min_hectares
+        decimal_10_2 max_hectares
+        decimal_5_2 max_percentage
+        text description
+        timestamp created_at "DEFAULT CURRENT_TIMESTAMP"
+    }
+
+    saf_request_logs {
+        bigserial id PK
+        varchar_50 request_id UK
+        varchar_20 identifier_type
+        text identifier_value
+        varchar_50 verification_type
+        jsonb layers_to_check
+        integer total_predios
+        integer predios_exitosos
+        integer predios_fallidos
+        integer total_layers
+        integer layers_with_intersection
+        integer layers_not_loaded
+        varchar_10 response_code
+        text response_message
+        timestamp request_timestamp "DEFAULT CURRENT_TIMESTAMP"
+        interval processing_time
+        inet client_ip
+        text user_agent
+    }
+
+    saf_predio_logs {
+        bigserial id PK
+        varchar_50 request_id FK
+        varchar_50 predio_id
+        varchar_255 predio_codigo
+        varchar_20 predio_owner_cedula
+        varchar_255 predio_owner_name
+        decimal_15_6 predio_area_m2
+        varchar_10 predio_srid
+        jsonb predio_geometry_geojson
+        varchar_50 layer_id
+        varchar_255 layer_name
+        varchar_255 wms_layer_name
+        boolean intersects
+        decimal_15_6 intersection_area_m2
+        decimal_7_4 percentage
+        jsonb intersection_geojson
+        boolean validation_passed
+        text validation_message
+        decimal_5_2 max_allowed_percentage
+        boolean layer_not_loaded
+        timestamp logged_at "DEFAULT CURRENT_TIMESTAMP"
+    }
+
+    saf_error_logs {
+        bigserial id PK
+        varchar_50 request_id FK
+        varchar_50 error_type
+        text error_message
+        text error_detail
+        text stack_trace
+        varchar_50 predio_id
+        varchar_50 layer_id
+        timestamp error_timestamp "DEFAULT CURRENT_TIMESTAMP"
+        inet client_ip
+    }
+
+    config_parameters {
+        varchar_100 param_key PK
+        text param_value
+        varchar_255 description
+        varchar_50 param_type
+        boolean is_encrypted "DEFAULT false"
+        timestamp created_at "DEFAULT CURRENT_TIMESTAMP"
+        timestamp updated_at "DEFAULT CURRENT_TIMESTAMP"
+    }
+
+    %% Base de datos saf_postgis (vistas)
+    mae_areas_conservacion {
+        varchar_50 codigo
+        varchar_255 nombre
+        varchar_50 tipo_conservacion
+        geometry_4326 geom "SRID 4326"
+        varchar_50 fuente
+        date fecha_actualizacion
+    }
+
+    mae_bosque_no_bosque {
+        varchar_10 periodo
+        varchar_50 clase_cobertura
+        decimal_5_2 confianza
+        geometry_4326 geom "SRID 4326"
+        varchar_50 fuente
+        date fecha_actualizacion
+    }
+
+    mae_uso_suelo_agricola {
+        varchar_50 tipo_agricultura
+        varchar_50 sub_tipo
+        decimal_5_2 area_ha
+        geometry_4326 geom "SRID 4326"
+        varchar_50 fuente
+        date fecha_actualizacion
+    }
+
+    mae_rios_principales {
+        varchar_50 nombre_rio
+        varchar_20 tipo_rio
+        decimal_8_2 longitud_km
+        geometry_4326 geom "SRID 4326"
+        varchar_50 fuente
+        date fecha_actualizacion
+    }
+
+    %% Relaciones
+    saf_validation_rules ||--o{ saf_validation_thresholds : "tiene"
+    saf_validation_layers ||--o{ saf_validation_rules : "contiene"
+    saf_request_logs ||--o{ saf_predio_logs : "registra"
+    saf_request_logs ||--o{ saf_error_logs : "contiene"

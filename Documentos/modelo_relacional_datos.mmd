@@ -1,0 +1,153 @@
+---
+title: Modelo Relacional de Datos - Relaciones y Cardinalidad
+---
+
+erDiagram
+    %% Relaciones principales con cardinalidad
+    saf_validation_layers ||--o{ saf_validation_rules : "contiene"
+    saf_validation_rules ||--o{ saf_validation_thresholds : "tiene"
+
+    saf_request_logs ||--o{ saf_predio_logs : "genera"
+    saf_request_logs ||--o{ saf_error_logs : "registra"
+
+    %% Relaciones de configuración
+    config_parameters ||--o{ saf_request_logs : "configura"
+
+    %% Relaciones con datos del MAE (vistas)
+
+
+
+
+    %% Detalles de cardinalidad
+    saf_validation_layers {
+        integer id PK
+        varchar layer_key UK
+        varchar table_name
+        varchar schema_name
+        varchar layer_display_name
+        varchar validation_type
+        boolean active
+    }
+
+    saf_validation_rules {
+        integer id PK
+        integer layer_id FK "-> saf_validation_layers.id"
+        varchar validation_type
+        decimal max_percentage
+        decimal min_area_m2
+        text validation_message
+        varchar layer_version
+        boolean is_active
+        varchar zone_type
+        text message_approved
+        text message_rejected
+    }
+
+    saf_validation_thresholds {
+        integer id PK
+        integer rule_id FK "-> saf_validation_rules.id"
+        decimal min_hectares
+        decimal max_hectares
+        decimal max_percentage
+        text description
+    }
+
+    saf_request_logs {
+        bigserial id PK
+        varchar request_id UK
+        varchar identifier_type
+        text identifier_value
+        varchar verification_type
+        jsonb layers_to_check
+        integer total_predios
+        integer predios_exitosos
+        integer predios_fallidos
+        integer total_layers
+        integer layers_with_intersection
+        integer layers_not_loaded
+        varchar response_code
+        text response_message
+        timestamp request_timestamp
+        interval processing_time
+        inet client_ip
+    }
+
+    saf_predio_logs {
+        bigserial id PK
+        varchar request_id FK "-> saf_request_logs.request_id"
+        varchar predio_id
+        varchar predio_codigo
+        varchar predio_owner_cedula
+        varchar predio_owner_name
+        decimal predio_area_m2
+        varchar predio_srid
+        jsonb predio_geometry_geojson
+        varchar layer_id
+        varchar layer_name
+        varchar wms_layer_name
+        boolean intersects
+        decimal intersection_area_m2
+        decimal percentage
+        jsonb intersection_geojson
+        boolean validation_passed
+        text validation_message
+        decimal max_allowed_percentage
+        boolean layer_not_loaded
+    }
+
+    saf_error_logs {
+        bigserial id PK
+        varchar request_id FK "-> saf_request_logs.request_id"
+        varchar error_type
+        text error_message
+        text error_detail
+        text stack_trace
+        varchar predio_id
+        varchar layer_id
+    }
+
+    config_parameters {
+        varchar param_key PK
+        text param_value
+        varchar description
+        varchar param_type
+        boolean is_encrypted
+    }
+
+    %% Vistas PostGIS (datos del MAE)
+    mae_areas_conservacion {
+        varchar codigo
+        varchar nombre
+        varchar tipo_conservacion
+        geometry geom
+        varchar fuente
+        date fecha_actualizacion
+    }
+
+    mae_bosque_no_bosque {
+        varchar periodo
+        varchar clase_cobertura
+        decimal confianza
+        geometry geom
+        varchar fuente
+        date fecha_actualizacion
+    }
+
+    mae_uso_suelo_agricola {
+        varchar tipo_agricultura
+        varchar sub_tipo
+        decimal area_ha
+        geometry geom
+        varchar fuente
+        date fecha_actualizacion
+    }
+
+    mae_rios_principales {
+        varchar nombre_rio
+        varchar tipo_rio
+        decimal longitud_km
+        geometry geom
+        varchar fuente
+        date fecha_actualizacion
+    }
+

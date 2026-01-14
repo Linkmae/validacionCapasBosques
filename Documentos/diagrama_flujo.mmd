@@ -1,0 +1,34 @@
+flowchart TD
+    A[Cliente SOAP] --> B{Recibir Request}
+    B --> C[Validar parametros]
+    C --> D{Validos?}
+
+    D -->|No| E[Error 400: Parametros invalidos]
+    D -->|Si| F[Inicializar servicios]
+
+    F --> G[Llamar servicio Predios]
+    G --> H{Exitoso?}
+
+    H -->|No| I[Error 503: Servicio no disponible]
+    H -->|Si| J[Procesar predios]
+
+    J --> K{Hay predios?}
+    K -->|No| L[Error 404: No se encontraron predios]
+    K -->|Si| M[Procesar cada predio]
+
+    M --> N[Validar intersecciones con capas]
+    N --> O{Cumple reglas de validacion?}
+
+    O -->|Si| P[Marcar como valido]
+    O -->|No| Q[Marcar como invalido]
+
+    P --> R[Crear respuesta]
+    Q --> R
+
+    R --> S[Loggear en BD]
+    S --> T[Retornar respuesta SOAP]
+
+    E --> U[Fin]
+    I --> U
+    L --> U
+    T --> U
