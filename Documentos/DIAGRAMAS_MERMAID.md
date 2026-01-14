@@ -394,19 +394,6 @@ erDiagram
     %% Relaciones de configuración
     config_parameters ||--o| saf_request_logs : ""
 
-    %% Relaciones con datos del MAE (vistas)
-    mae_areas_conservacion o--o{ saf_predio_logs : ""
-    mae_areas_conservacion o--o{ saf_validation_rules : ""
-
-    mae_bosque_no_bosque o--o{ saf_predio_logs : ""
-    mae_bosque_no_bosque o--o{ saf_validation_rules : ""
-
-    mae_uso_suelo_agricola o--o{ saf_predio_logs : ""
-    mae_uso_suelo_agricola o--o{ saf_validation_rules : ""
-
-    mae_rios_principales o--o{ saf_predio_logs : ""
-    mae_rios_principales o--o{ saf_validation_rules : ""
-
     %% Detalles de cardinalidad
     saf_validation_layers {
         integer id PK
@@ -556,24 +543,24 @@ graph TB
     %% Servidor de aplicaciones
     subgraph "JBoss EAP 7.4"
         subgraph "WAR - SAF Verification Service"
-            subgraph "Capa de Presentación"
+            subgraph "Capa de Presentacion"
                 SOAP_WS[VerificationService<br/>@WebService<br/>@Stateless EJB]
             end
 
             subgraph "Capa de Negocio"
-                ConfigMgr[ConfigManager<br/>Gestión de configuración]
+                ConfigMgr[ConfigManager<br/>Gestion de configuracion]
                 PrediosClient[PrediosClient<br/>Cliente SOAP externo]
-                ValidationEngine[Validation Engine<br/>Motor de validación]
+                ValidationEngine[Validation Engine<br/>Motor de validacion]
             end
 
             subgraph "Capa de Datos"
-                DB_Manager[DatabaseManager<br/>Gestión BD y logs]
+                DB_Manager[DatabaseManager<br/>Gestion BD y logs]
                 LayerConfig[LayerValidationConfig<br/>Cache de reglas<br/>TTL: 5 min]
             end
 
             subgraph "Componentes Internos"
-                Cache[(Cache System<br/>Reglas de validación)]
-                Logging[(Logging System<br/>Auditoría)]
+                Cache[(Cache System<br/>Reglas de validacion)]
+                Logging[(Logging System<br/>Auditoria)]
                 ErrorHandler[Error Handler<br/>Manejo de excepciones]
             end
         end
