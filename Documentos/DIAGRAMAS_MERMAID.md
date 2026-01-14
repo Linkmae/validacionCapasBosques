@@ -388,24 +388,24 @@ erDiagram
     saf_validation_layers ||--o{ saf_validation_rules : "1:N\nUna capa puede tener\nmúltiples reglas"
     saf_validation_rules ||--o{ saf_validation_thresholds : "1:N\nUna regla puede tener\numbrales escalonados"
 
-    saf_request_logs ||--o{ saf_predio_logs : "genera"
-    saf_request_logs ||--o{ saf_error_logs : "registra"
+    saf_request_logs ||--o{ saf_predio_logs
+    saf_request_logs ||--o{ saf_error_logs
 
     %% Relaciones de configuración
-    config_parameters ||--o| saf_request_logs : "configura"
+    config_parameters ||--o| saf_request_logs
 
     %% Relaciones con datos del MAE (vistas)
-    mae_areas_conservacion o--o{ saf_predio_logs : "intersecta"
-    mae_areas_conservacion o--o{ saf_validation_rules : "referencia"
+    mae_areas_conservacion o--o{ saf_predio_logs
+    mae_areas_conservacion o--o{ saf_validation_rules
 
-    mae_bosque_no_bosque o--o{ saf_predio_logs : "intersecta"
-    mae_bosque_no_bosque o--o{ saf_validation_rules : "referencia"
+    mae_bosque_no_bosque o--o{ saf_predio_logs
+    mae_bosque_no_bosque o--o{ saf_validation_rules
 
-    mae_uso_suelo_agricola o--o{ saf_predio_logs : "valida"
-    mae_uso_suelo_agricola o--o{ saf_validation_rules : "referencia"
+    mae_uso_suelo_agricola o--o{ saf_predio_logs
+    mae_uso_suelo_agricola o--o{ saf_validation_rules
 
-    mae_rios_principales o--o{ saf_predio_logs : "intersecta"
-    mae_rios_principales o--o{ saf_validation_rules : "referencia"
+    mae_rios_principales o--o{ saf_predio_logs
+    mae_rios_principales o--o{ saf_validation_rules
 
     %% Detalles de cardinalidad
     saf_validation_layers {
