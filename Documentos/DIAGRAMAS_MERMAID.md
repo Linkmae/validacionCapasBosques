@@ -388,24 +388,24 @@ erDiagram
     saf_validation_layers ||--o{ saf_validation_rules : "1:N\nUna capa puede tener\nmúltiples reglas"
     saf_validation_rules ||--o{ saf_validation_thresholds : "1:N\nUna regla puede tener\numbrales escalonados"
 
-    saf_request_logs ||--o{ saf_predio_logs : "1:N\nUna solicitud genera\nmúltiples logs de predio"
-    saf_request_logs ||--o{ saf_error_logs : "1:N\nUna solicitud puede\ngenerar múltiples errores"
+    saf_request_logs ||--o{ saf_predio_logs : "genera"
+    saf_request_logs ||--o{ saf_error_logs : "registra"
 
     %% Relaciones de configuración
-    config_parameters o{ saf_request_logs : "1:1\nParámetros globales\nreferenciados en logs"
+    config_parameters ||--o| saf_request_logs : "configura"
 
     %% Relaciones con datos del MAE (vistas)
-    mae_areas_conservacion o--o{ saf_predio_logs : "N:M\nMúltiples predios pueden\nintersectar una misma área"
-    mae_areas_conservacion o--o{ saf_validation_rules : "N:1\nReglas referencian\ncapas específicas"
+    mae_areas_conservacion o--o{ saf_predio_logs : "intersecta"
+    mae_areas_conservacion o--o{ saf_validation_rules : "referencia"
 
-    mae_bosque_no_bosque o--o{ saf_predio_logs : "N:M\nIntersecciones dinámicas"
-    mae_bosque_no_bosque o--o{ saf_validation_rules : "N:1\nConfiguración de reglas"
+    mae_bosque_no_bosque o--o{ saf_predio_logs : "intersecta"
+    mae_bosque_no_bosque o--o{ saf_validation_rules : "referencia"
 
-    mae_uso_suelo_agricola o--o{ saf_predio_logs : "N:M\nValidación de compatibilidad"
-    mae_uso_suelo_agricola o--o{ saf_validation_rules : "N:1\nReglas específicas"
+    mae_uso_suelo_agricola o--o{ saf_predio_logs : "valida"
+    mae_uso_suelo_agricola o--o{ saf_validation_rules : "referencia"
 
-    mae_rios_principales o--o{ saf_predio_logs : "N:M\nProtección de fuentes agua"
-    mae_rios_principales o--o{ saf_validation_rules : "N:1\nUmbrales de distancia"
+    mae_rios_principales o--o{ saf_predio_logs : "intersecta"
+    mae_rios_principales o--o{ saf_validation_rules : "referencia"
 
     %% Detalles de cardinalidad
     saf_validation_layers {
