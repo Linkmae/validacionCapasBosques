@@ -376,12 +376,6 @@ erDiagram
     saf_validation_layers ||--o{ saf_validation_rules : "1..*"
     saf_request_logs ||--o{ saf_predio_logs : "1..*"
     saf_request_logs ||--o{ saf_error_logs : "1..*"
-
-    %% Notas
-    note right of saf_validation_layers : Tabla principal de\nconfiguración de capas
-    note right of saf_request_logs : Auditoría completa\nde solicitudes SOAP
-    note right of saf_predio_logs : Detalle granular\nde cada validación
-    note right of mae_areas_conservacion : Vista PostGIS -\nDatos del MAE
 ```
 
 ---
