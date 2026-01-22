@@ -157,32 +157,19 @@ El manual cubre la operación del servicio SOAP desplegado en JBoss EAP 7.4 con 
 
 ```mermaid
 flowchart TB
-    A[Inicio] --> B[Systemctl start jboss]
-    B --> C{JBoss arranca?}
-    C -->|No| D[Revisar logs<br/>journalctl -u jboss]
-    D --> E[Corregir error]
-    E --> B
-    C -->|Sí| F[Cargar standalone.xml]
-    F --> G[Inicializar DataSources]
-    G --> H{DataSources OK?}
-    H -->|No| I[Error conexión BD]
-    I --> J[Verificar PostgreSQL]
-    J --> K[Verificar credenciales]
-    K --> G
-    H -->|Sí| L[Escanear deployments/]
-    L --> M{WAR encontrado?}
-    M -->|No| N[Fin - Sin aplicaciones]
-    M -->|Sí| O[Desplegar WAR]
-    O --> P[Inicializar Weld CDI]
-    P --> Q[Inicializar EJB Container]
-    Q --> R[Registrar WebService]
-    R --> S[Publicar WSDL]
-    S --> T{Despliegue exitoso?}
-    T -->|No| U[Ver server.log]
-    U --> V[Corregir error]
-    V --> O
-    T -->|Sí| W[Sistema LISTO]
-    W --> Z[Fin]
+    A[Inicio] --> B[systemctl start jboss]
+    B --> C{Arranca?}
+    C -->|No| D[Revisar logs]
+    D --> B
+    C -->|Sí| E[Inicializar DataSources]
+    E --> F{BD conectada?}
+    F -->|No| G[Verificar PostgreSQL]
+    G --> E
+    F -->|Sí| H[Desplegar WAR]
+    H --> I{Exitoso?}
+    I -->|No| J[Ver server.log]
+    J --> H
+    I -->|Sí| K[Sistema LISTO]
 ```
 
 **Tiempo estimado:** 15-30 segundos
@@ -193,74 +180,21 @@ flowchart TB
 
 ```mermaid
 flowchart TB
-    A[Cliente envía Request SOAP] --> B[JBoss recibe en puerto 8580]
-    B --> C[Dispatcher JAX-WS]
-    C --> D[VerificationService<br/>@WebMethod<br/>verifyPrediosByIdentifier]
-    
-    D --> E[Generar requestId UUID]
-    E --> F{Validar parámetros}
-    F -->|Inválido| G[Return 400 ERROR_VALIDACION]
-    F -->|Válido| H[initializeIfNeeded]
-    
-    H --> I{Servicios<br/>inicializados?}
-    I -->|No| J[Crear DatabaseManager<br/>logsDS + capasDS]
-    J --> K[Leer config_parameters<br/>predios_service_url/usuario/clave]
-    K --> L[Crear PrediosClient]
-    L --> M[Servicios listos]
-    I -->|Sí| M
-    
-    M --> N[PrediosClient.getPredios<br/>identifierType, identifierValue]
-    N --> O{Servicio MAE<br/>responde?}
-    O -->|No| P[Return 503<br/>ERROR_SERVICIO_EXTERNO]
-    O -->|Sí| Q{Predios<br/>encontrados?}
-    Q -->|No| R[Return 404<br/>NO_ENCONTRADO]
-    Q -->|Sí| S[Iterar predios]
-    
-    S --> T[processPredio]
-    T --> U[LayerValidationConfig<br/>.getRulesForType<br/>verificationType]
-    U --> V{Cache vigente?}
-    V -->|No| W[SELECT * FROM<br/>saf_validation_layers<br/>WHERE is_active=true]
-    W --> X[Guardar en cache 5 min]
-    X --> Y[Retornar reglas]
-    V -->|Sí| Y
-    
-    Y --> Z[Filtrar capas<br/>si layersToCheck especificado]
-    Z --> AA[Iterar reglas de validación]
-    
-    AA --> AB[calculateIntersectionWithValidation<br/>predio, rule]
-    AB --> AC[DatabaseManager<br/>.calculateIntersection<br/>predioWKT, schemaTabla]
-    
-    AC --> AD[Query PostGIS:<br/>ST_Intersects<br/>ST_Intersection<br/>ST_Area<br/>ST_AsGeoJSON]
-    AD --> AE{Query<br/>exitosa?}
-    AE -->|No| AF[Marcar layerNotLoaded=true]
-    AE -->|Sí| AG[Extraer resultados]
-    
-    AG --> AH[Calcular percentage<br/>área_intersección/área_predio*100]
-    AH --> AI{Percentage ><br/>maxAllowed?}
-    AI -->|Sí| AJ[validationPassed=false<br/>mensaje rechazo]
-    AI -->|No| AK[validationPassed=true<br/>mensaje aprobado]
-    
-    AF --> AL[Agregar LayerResult]
-    AJ --> AL
-    AK --> AL
-    
-    AL --> AM{Más<br/>capas?}
-    AM -->|Sí| AA
-    AM -->|No| AN[Crear PredioVerification]
-    
-    AN --> AO[dbManager.logPredioDetails<br/>INSERT saf_predio_logs]
-    AO --> AP{Más<br/>predios?}
-    AP -->|Sí| T
-    AP -->|No| AQ[createSummary<br/>totalPredios, with/without intersection]
-    
-    AQ --> AR[dbManager.logRequest<br/>INSERT saf_request_logs]
-    AR --> AS[Crear VerifyPrediosByIdentifierResponse]
-    AS --> AT[Return SUCCESS]
-    
-    G --> AZ[Fin]
-    P --> AZ
-    R --> AZ
-    AT --> AZ
+    A[Request SOAP] --> B[Validar parámetros]
+    B -->|Inválido| C[Error 400]
+    B -->|Válido| D[Inicializar servicios]
+    D --> E[Llamar servicio Predios MAE]
+    E -->|Error| F[Error 503]
+    E -->|Sin datos| G[Error 404]
+    E -->|OK| H[Obtener reglas de validación]
+    H --> I[Por cada predio]
+    I --> J[Calcular intersecciones PostGIS]
+    J --> K[Validar porcentajes]
+    K --> L[Generar resultado]
+    L --> M{Más predios?}
+    M -->|Sí| I
+    M -->|No| N[Registrar logs]
+    N --> O[Retornar respuesta SUCCESS]
 ```
 
 **Tiempo promedio:** 2-5 segundos por solicitud
@@ -271,37 +205,14 @@ flowchart TB
 
 ```mermaid
 flowchart TB
-    A[Solicitud requiere reglas] --> B[LayerValidationConfig<br/>.getRulesForType]
-    B --> C{VALIDATION_RULES_CACHE<br/>existe?}
-    C -->|No| D[Primera carga]
-    C -->|Sí| E{Cache expiró?<br/>now - lastRefresh > 5 min}
-    
-    D --> F[loadRulesFromDatabase]
-    E -->|Sí| F
-    E -->|No| G[Retornar cache]
-    
-    F --> H[getJDBCConnection<br/>saf_interconexion]
-    H --> I[SELECT layer_key, layer_name,<br/>layer_table_name, validation_type,<br/>max_intersection_percentage,<br/>...<br/>FROM saf_validation_layers<br/>WHERE is_active = true]
-    
-    I --> J{Query<br/>exitosa?}
-    J -->|No| K[Log ERROR<br/>Retornar cache anterior o vacío]
-    J -->|Sí| L[Iterar ResultSet]
-    
-    L --> M[Crear LayerValidationRule<br/>por cada fila]
-    M --> N{Tiene<br/>thresholds?}
-    N -->|Sí| O[SELECT * FROM<br/>saf_thresholds_by_size<br/>WHERE layer_id = ?]
-    O --> P[Agregar ThresholdBySize<br/>a la regla]
-    N -->|No| Q[Sin umbrales escalonados]
-    
-    P --> R[Agrupar por<br/>validation_type]
-    Q --> R
-    R --> S[Actualizar<br/>VALIDATION_RULES_CACHE]
-    S --> T[Actualizar<br/>lastCacheRefresh = now]
-    T --> U[Retornar reglas]
-    
-    K --> Z[Fin]
-    G --> Z
-    U --> Z
+    A[Solicitar reglas] --> B{Cache existe?}
+    B -->|No| C[Cargar desde BD]
+    B -->|Sí| D{Expiró cache > 5min?}
+    D -->|Sí| C
+    D -->|No| E[Retornar cache]
+    C --> F[SELECT saf_validation_layers]
+    F --> G[Actualizar cache]
+    G --> E
 ```
 
 **Frecuencia de actualización:** Cada 5 minutos
@@ -312,35 +223,13 @@ flowchart TB
 
 ```mermaid
 flowchart TB
-    A[calculateIntersection<br/>predioWKT, capaSchemaTabla] --> B[Construir query SQL]
-    
-    B --> C[Query:<br/>SELECT<br/>  CASE WHEN ST_Area > 0 THEN true<br/>  ST_Area ST_Transform geography<br/>  ST_AsGeoJSON<br/>FROM<br/>  SELECT ST_Union ST_Intersection<br/>  FROM schema.tabla<br/>  WHERE ST_Intersects]
-    
-    C --> D[capasDS.getConnection]
-    D --> E[prepareStatement]
-    E --> F[setString 1, predioWKT]
-    F --> G[setString 2, predioWKT]
-    G --> H[executeQuery]
-    
-    H --> I{Excepción?}
-    I -->|Sí| J{Tabla no<br/>existe?}
-    J -->|Sí| K[Return Map<br/>table_not_found: true<br/>intersects: false<br/>area_m2: 0]
-    J -->|No| L[Log ERROR<br/>Return null]
-    
-    I -->|No| M[ResultSet.next]
-    M --> N{Tiene<br/>resultados?}
-    N -->|No| O[Return null]
-    N -->|Sí| P[Extraer datos]
-    
-    P --> Q[Map.put intersects<br/>rs.getBoolean]
-    Q --> R[Map.put area_m2<br/>rs.getDouble]
-    R --> S[Map.put geojson<br/>rs.getString]
-    S --> T[Return Map]
-    
-    K --> Z[Fin]
-    L --> Z
-    O --> Z
-    T --> Z
+    A[Recibir predio WKT] --> B[Ejecutar query PostGIS]
+    B --> C[ST_Intersects + ST_Area]
+    C --> D{Tiene intersección?}
+    D -->|No| E[Retornar área = 0]
+    D -->|Sí| F[Calcular área m²]
+    F --> G[Generar GeoJSON]
+    G --> H[Retornar resultados]
 ```
 
 **Tiempo promedio:** 0.5-2 segundos por capa
@@ -351,38 +240,13 @@ flowchart TB
 
 ```mermaid
 flowchart TB
-    A[Finaliza procesamiento] --> B[dbManager.logRequest<br/>request, response]
-    
-    B --> C[Calcular métricas<br/>totalPredios<br/>totalLayers<br/>layersNotLoaded<br/>layersWithIntersection]
-    
-    C --> D[logsDS.getConnection]
-    D --> E[INSERT INTO saf_request_logs<br/>request_id, identifier_type,<br/>identifier_value, status_code,<br/>total_predios, total_layers_checked,<br/>layers_with_intersection,<br/>response_timestamp]
-    
-    E --> F{INSERT<br/>exitoso?}
-    F -->|No| G[Log SEVERE<br/>No interrumpir flujo]
-    F -->|Sí| H[commit]
-    
-    H --> I[Iterar predioVerifications]
-    I --> J[dbManager.logPredioDetails<br/>requestId, verification]
-    
-    J --> K[Iterar layersResults]
-    K --> L[Agregar batch<br/>INSERT INTO saf_predio_logs<br/>request_id, predio_id,<br/>predio_codigo, layer_name,<br/>intersects, intersection_area_m2,<br/>percentage, validation_passed]
-    
-    L --> M{Más<br/>layers?}
-    M -->|Sí| K
-    M -->|No| N[executeBatch]
-    
-    N --> O{Batch<br/>exitoso?}
-    O -->|No| P[Log SEVERE]
-    O -->|Sí| Q[commit]
-    
-    Q --> R{Más<br/>predios?}
-    R -->|Sí| I
-    R -->|No| S[Log INFO<br/>Request logged successfully]
-    
-    G --> Z[Fin]
-    P --> Z
-    S --> Z
+    A[Finaliza procesamiento] --> B[Calcular métricas]
+    B --> C[INSERT saf_request_logs]
+    C --> D[Por cada predio]
+    D --> E[INSERT BATCH saf_predio_logs]
+    E --> F{Más predios?}
+    F -->|Sí| D
+    F -->|No| G[Commit transacción]
 ```
 
 **Nota:** Los errores de logging NO interrumpen el flujo principal.
@@ -393,36 +257,14 @@ flowchart TB
 
 ```mermaid
 flowchart TB
-    A[Excepción capturada] --> B{Tipo de<br/>excepción?}
-    
-    B -->|ValidationException| C[Código 400<br/>ERROR_VALIDACION]
-    B -->|ServiceException| D[Código 503<br/>ERROR_SERVICIO_EXTERNO]
-    B -->|SQLException| E[Código 500<br/>CONNECTION_ERROR]
-    B -->|SpatialException| F[Código 500<br/>SPATIAL_ERROR]
-    B -->|Other| G[Código 500<br/>INTERNAL_ERROR]
-    
-    C --> H[logErrorSafe<br/>requestId, errorType, exception]
-    D --> H
-    E --> H
-    F --> H
-    G --> H
-    
-    H --> I{dbManager<br/>disponible?}
-    I -->|No| J[Log solo a<br/>System.err]
-    I -->|Sí| K[dbManager.logError]
-    
-    K --> L[INSERT INTO saf_error_logs<br/>request_id, error_type,<br/>error_message, stack_trace,<br/>timestamp]
-    
-    L --> M{INSERT<br/>exitoso?}
-    M -->|No| N[Log SEVERE<br/>Unable to log error]
-    M -->|Sí| O[Log INFO<br/>Error logged]
-    
-    J --> P[Crear RequestStatus<br/>code, errorType, message]
-    N --> P
-    O --> P
-    
-    P --> Q[Retornar Response<br/>con error]
-    Q --> Z[Fin]
+    A[Excepción] --> B{Tipo?}
+    B -->|Validación| C[Error 400]
+    B -->|Servicio Externo| D[Error 503]
+    B -->|BD/Spatial| E[Error 500]
+    C --> F[Registrar en saf_error_logs]
+    D --> F
+    E --> F
+    F --> G[Retornar respuesta de error]
 ```
 
 ---
