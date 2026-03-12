@@ -37,8 +37,8 @@ public class ThresholdBySize {
      * @return true si el tamaño está en el rango de este umbral
      */
     public boolean appliesTo(double predioHectares) {
-        boolean aboveMin = predioHectares >= minHectares;
-        boolean belowMax = (maxHectares == null) || (predioHectares < maxHectares);
+        boolean aboveMin = predioHectares > minHectares || (predioHectares == 0 && minHectares == 0);
+        boolean belowMax = (maxHectares == null) || (predioHectares <= maxHectares);
         return aboveMin && belowMax;
     }
     

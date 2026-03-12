@@ -6,6 +6,8 @@ public class Predio {
     private String identifier;
     private String ownerName;
     private double areaM2;
+    private Double reportedAreaM2;
+    private String areaConsistencyWarning;
     private int srid;
     private String geometryWKT;
     private String geometryGeoJSON;
@@ -52,6 +54,22 @@ public class Predio {
 
     public void setArea(double area) {
         this.areaM2 = area;
+    }
+
+    public Double getReportedAreaM2() {
+        return reportedAreaM2;
+    }
+
+    public void setReportedAreaM2(Double reportedAreaM2) {
+        this.reportedAreaM2 = reportedAreaM2;
+    }
+
+    public String getAreaConsistencyWarning() {
+        return areaConsistencyWarning;
+    }
+
+    public void setAreaConsistencyWarning(String areaConsistencyWarning) {
+        this.areaConsistencyWarning = areaConsistencyWarning;
     }
 
     public int getSRID() {

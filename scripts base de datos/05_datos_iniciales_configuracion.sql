@@ -1,9 +1,11 @@
--- Script para insertar datos iniciales en las tablas de configuración SAF
+-- Script para insertar datos iniciales ACTUALIZADOS en tablas de configuración SAF
 -- Base de datos: saf_interconexion
 -- Ejecutar después de crear las tablas
--- Fecha: 13 de enero de 2026
+-- Fecha actualización: 2026-03-12
 
 \c saf_interconexion
+
+BEGIN;
 
 -- ===========================================
 -- DATOS INICIALES: saf_validation_layers
@@ -13,132 +15,169 @@ INSERT INTO saf_validation_layers (
     max_intersection_percentage, min_intersection_area_m2, validation_message,
     active, version, zone_type, message_approved, message_rejected, notes
 ) VALUES
--- Capas de Áreas de Conservación
-('areas_conservacion_nacional', 'areas_conservacion', 'public', 'Áreas de Conservación Nacional', 'AREAS_CONSERVACION',
- 0.0, 10.0, 'El predio intersecta con áreas de conservación nacional',
- true, '2026.01', 'NACIONAL',
- 'Predio aprobado - No intersecta áreas de conservación nacional',
- 'Predio rechazado - Intersecta con áreas de conservación nacional',
- 'Capa oficial del MAE - Áreas de Conservación Nacional'),
+('bosque_no_bosque', 'bosque_no_bosque', 'public', 'Bosque No Bosque', 'BOSQUE_NO_BOSQUE',
+ 0.0, 100.0, 'Intersección con bosque no bosque',
+ true, 'prueba-v1', NULL,
+ 'Su producción se encuentra en zona libre de deforestación. Cumple requisito para EUDR',
+ 'Su producción se encuentra en zona boscosa. No cumple requisito para EUDR',
+ 'Actualizado según CSV 4dic2025 - Umbrales escalonados por tamaño'),
 
-('areas_conservacion_regional', 'areas_conservacion_regional', 'public', 'Áreas de Conservación Regional', 'AREAS_CONSERVACION',
- 0.0, 10.0, 'El predio intersecta con áreas de conservación regional',
- true, '2026.01', 'REGIONAL',
- 'Predio aprobado - No intersecta áreas de conservación regional',
- 'Predio rechazado - Intersecta con áreas de conservación regional',
- 'Capa regional del MAE'),
+('areas_protegidas_snap', 'areas_protegidas_snap', 'public', 'Sistema Nacional de Áreas Protegidas', 'AREAS_CONSERVACION',
+ 0.0, 100.0, 'Intersección con áreas protegidas SNAP',
+ true, '2019-08-08', NULL,
+ 'Su producción se encuentra fuera del SNAP. Cumple requisito para EUDR',
+ 'Su producción se encuentra en zona de protección SNAP. No cumple requisito para EUDR',
+ 'Actualizado según CSV 4dic2025 - Zonas de protección y recuperación'),
 
--- Capas de Bosque/No Bosque
-('bosque_no_bosque', 'bosque_no_bosque', 'public', 'Cobertura Boscosa MAE', 'BOSQUE_NO_BOSQUE',
- 0.0, 10.0, 'El predio intersecta con zonas boscosas',
- true, '2026.01', NULL,
- 'Predio aprobado - Ubicado en zona no boscosa',
- 'Predio rechazado - Intersecta con zona boscosa protegida',
- 'Capa de cobertura boscosa del MAE - Bosque/No Bosque'),
+('patrimonio_forestal_estado', 'patrimonio_forestal_estado', 'public', 'Patrimonio Forestal del Estado', 'AREAS_CONSERVACION',
+ 0.0, 100.0, 'Intersección con Patrimonio Forestal del Estado',
+ true, '2018-07-11', NULL,
+ 'Su producción se encuentra fuera de Patrimonio Forestal del Estado. Cumple requisito para EUDR',
+ 'Su producción se encuentra en Patrimonio Forestal del Estado. No cumple requisito para EUDR',
+ 'Actualizado según CSV 4dic2025'),
 
--- Capas de Uso del Suelo
-('uso_suelo_agricola', 'uso_suelo_agricola', 'public', 'Uso del Suelo Agrícola', 'USO_SUELO',
- 0.0, 10.0, 'El predio intersecta con zonas de uso agrícola',
- true, '2026.01', NULL,
- 'Predio aprobado - Compatible con uso agrícola',
- 'Predio rechazado - No compatible con uso agrícola autorizado',
- 'Capa de uso del suelo agrícola'),
+('bosques_protectores', 'bosques_protectores', 'public', 'Bosques Protectores', 'AREAS_CONSERVACION',
+ 0.0, 100.0, 'Intersección con Bosques Protectores',
+ true, '2019-08-07', NULL,
+ 'Su producción se encuentra fuera de Bosques y Vegetación Protectora. Cumple requisito para EUDR',
+ 'Su producción se encuentra en zona de protección BVP. No cumple requisito para EUDR',
+ 'Actualizado según CSV 4dic2025'),
 
-('uso_suelo_forestal', 'uso_suelo_forestal', 'public', 'Uso del Suelo Forestal', 'USO_SUELO',
- 0.0, 10.0, 'El predio intersecta con zonas de uso forestal',
- true, '2026.01', NULL,
- 'Predio aprobado - Compatible con uso forestal',
- 'Predio rechazado - No compatible con uso forestal autorizado',
- 'Capa de uso del suelo forestal'),
+('vegetacion_protectora', 'vegetacion_protectora', 'public', 'Vegetación Protectora', 'AREAS_CONSERVACION',
+ 5.0, 100.0, 'Intersección con Vegetación Protectora',
+ true, '2019-08-07', NULL,
+ 'Su producción se encuentra fuera de Bosques y Vegetación Protectora. Cumple requisito para EUDR',
+ 'Su producción se encuentra en zona de protección BVP. No cumple requisito para EUDR',
+ 'Actualizado según CSV 4dic2025'),
 
--- Capas de Áreas Protegidas
-('zonas_amortiguamiento', 'zonas_amortiguamiento', 'public', 'Zonas de Amortiguamiento', 'AREAS_PROTEGIDAS',
- 0.0, 10.0, 'El predio intersecta con zonas de amortiguamiento',
- true, '2026.01', NULL,
- 'Predio aprobado - Fuera de zonas de amortiguamiento',
- 'Predio rechazado - Intersecta con zona de amortiguamiento',
- 'Zonas de amortiguamiento de áreas protegidas'),
+('reservas_marinas', 'reservas_marinas', 'public', 'Reservas Marinas', 'AREAS_CONSERVACION',
+ 0.0, 100.0, 'Intersección con Reservas Marinas/Biosfera',
+ true, '2019', NULL,
+ 'Su producción se encuentra fuera de Reservas de Biosfera. Cumple requisito para EUDR',
+ 'Su producción se encuentra en Reserva de Biosfera. No cumple requisito para EUDR',
+ 'Actualizado según CSV 4dic2025'),
 
-('corredores_biologicos', 'corredores_biologicos', 'public', 'Corredores Biológicos', 'AREAS_PROTEGIDAS',
- 0.0, 10.0, 'El predio intersecta con corredores biológicos',
- true, '2026.01', NULL,
- 'Predio aprobado - Fuera de corredores biológicos',
- 'Predio rechazado - Intersecta con corredor biológico',
- 'Corredores biológicos del MAE'),
+('programa_sociobosque', 'v_hc005_area_bajo_conservacion_a', 'h_demarcacion', 'Programa SocioBosque', 'AREAS_CONSERVACION',
+ 0.0, 100.0, 'Intersección con áreas del Programa SocioBosque',
+ true, '2021-09-14', NULL,
+ 'Su producción se encuentra fuera de predios Proyecto SocioBosque. Cumple legislación nacional por lo tanto cumple requisito para EUDR',
+ 'Su producción cruza con predios Proyecto SocioBosque. No cumple legislación nacional por lo tanto no cumple requisito para EUDR',
+ 'Agregado según CSV 4dic2025'),
 
--- Capas de Recursos Hídricos
-('fuentes_agua', 'fuentes_agua', 'public', 'Fuentes de Agua', 'RECURSOS_HIDRICOS',
- 0.0, 10.0, 'El predio intersecta con fuentes de agua',
- true, '2026.01', NULL,
- 'Predio aprobado - Fuera de fuentes de agua',
- 'Predio rechazado - Intersecta con fuente de agua protegida',
- 'Fuentes de agua superficiales'),
+('zona_intangible', 'hc003_zona_intangible_a', 'h_demarcacion', 'Zona Intangible Tagaeri-Taromenane', 'AREAS_CONSERVACION',
+ 0.0, 100.0, 'Intersección con Zona Intangible',
+ true, '2020-04-08', NULL,
+ 'Su producción se encuentra fuera de Zona Intangible. Cumple legislación nacional por lo tanto cumple requisito para EUDR',
+ 'Su producción cruza Zona Intangible. No cumple legislación nacional por lo tanto no cumple requisito para EUDR',
+ 'Agregado según CSV 4dic2025'),
 
-('rios_principales', 'rios_principales', 'public', 'Ríos Principales', 'RECURSOS_HIDRICOS',
- 0.0, 10.0, 'El predio intersecta con ríos principales',
- true, '2026.01', NULL,
- 'Predio aprobado - Fuera de ríos principales',
- 'Predio rechazado - Intersecta con río principal',
- 'Ríos principales y afluentes mayores'),
-
--- Capas de Infraestructura
-('infraestructura_critica', 'infraestructura_critica', 'public', 'Infraestructura Crítica', 'INFRAESTRUCTURA',
- 0.0, 10.0, 'El predio intersecta con infraestructura crítica',
- true, '2026.01', NULL,
- 'Predio aprobado - Fuera de infraestructura crítica',
- 'Predio rechazado - Intersecta con infraestructura crítica',
- 'Infraestructura crítica (oleoductos, gasoductos, líneas eléctricas)')
-ON CONFLICT (layer_key) DO NOTHING;
+('zona_recarga_hidrica', 'zona_recarga_hidrica', 'h_demarcacion', 'Zona de Recarga Hídrica', 'AREAS_CONSERVACION',
+ 0.0, 100.0, 'Intersección con Zona de Recarga Hídrica',
+ true, '2024-01-25', NULL,
+ 'Su producción se encuentra fuera de Zona de Recarga Hídrica. Cumple legislación nacional por lo tanto cumple requisito para EUDR',
+ 'Su producción cruza con Zona de Recarga Hídrica. No cumple legislación nacional por lo tanto no cumple requisito para EUDR',
+ 'Agregado según CSV 4dic2025')
+ON CONFLICT (layer_key) DO UPDATE SET
+    table_name = EXCLUDED.table_name,
+    schema_name = EXCLUDED.schema_name,
+    layer_display_name = EXCLUDED.layer_display_name,
+    validation_type = EXCLUDED.validation_type,
+    max_intersection_percentage = EXCLUDED.max_intersection_percentage,
+    min_intersection_area_m2 = EXCLUDED.min_intersection_area_m2,
+    validation_message = EXCLUDED.validation_message,
+    active = EXCLUDED.active,
+    version = EXCLUDED.version,
+    zone_type = EXCLUDED.zone_type,
+    message_approved = EXCLUDED.message_approved,
+    message_rejected = EXCLUDED.message_rejected,
+    notes = EXCLUDED.notes,
+    updated_at = CURRENT_TIMESTAMP;
 
 -- ===========================================
 -- DATOS INICIALES: saf_validation_thresholds
 -- ===========================================
--- Obtener IDs de las capas insertadas
+-- Se reemplazan umbrales de capas con configuración escalonada
+DELETE FROM saf_validation_thresholds
+WHERE layer_id IN (
+    SELECT id FROM saf_validation_layers
+    WHERE layer_key IN ('bosque_no_bosque', 'programa_sociobosque', 'zona_intangible', 'zona_recarga_hidrica')
+);
+
+-- Umbrales bosque_no_bosque (13 tramos)
 INSERT INTO saf_validation_thresholds (layer_id, min_hectares, max_hectares, max_percentage, description)
-SELECT
-    vl.id,
-    thresholds.min_hectares,
-    thresholds.max_hectares,
-    thresholds.max_percentage,
-    thresholds.description
-FROM saf_validation_layers vl
-CROSS JOIN (
+SELECT l.id, t.min_h, t.max_h, t.max_p, t.desc_txt
+FROM saf_validation_layers l
+JOIN (
     VALUES
-    -- Umbrales para predios pequeños (0-5 ha)
-    (0.0, 5.0, 0.0, 'Predios pequeños: Sin tolerancia de intersección'),
-    -- Umbrales para predios medianos (5-50 ha)
-    (5.0, 50.0, 1.0, 'Predios medianos: Máximo 1% de intersección'),
-    -- Umbrales para predios grandes (50-500 ha)
-    (50.0, 500.0, 5.0, 'Predios grandes: Máximo 5% de intersección'),
-    -- Umbrales para predios muy grandes (500+ ha)
-    (500.0, NULL, 10.0, 'Predios muy grandes: Máximo 10% de intersección')
-) AS thresholds(min_hectares, max_hectares, max_percentage, description)
-WHERE vl.active = true
-ON CONFLICT DO NOTHING;
+    (0.0, 1.0, 50.0, 'Predios ≤1 ha: máximo 50% de intersección con bosque'),
+    (1.0, 2.0, 25.0, 'Predios 1-2 ha: máximo 25% de intersección con bosque'),
+    (2.0, 3.0, 17.0, 'Predios 2-3 ha: máximo 17% de intersección con bosque'),
+    (3.0, 4.0, 13.0, 'Predios 3-4 ha: máximo 13% de intersección con bosque'),
+    (4.0, 5.0, 10.0, 'Predios 4-5 ha: máximo 10% de intersección con bosque'),
+    (5.0, 6.0, 9.0,  'Predios 5-6 ha: máximo 9% de intersección con bosque'),
+    (6.0, 7.0, 8.0,  'Predios 6-7 ha: máximo 8% de intersección con bosque'),
+    (7.0, 9.0, 7.0,  'Predios 7-9 ha: máximo 7% de intersección con bosque'),
+    (9.0, 10.0, 6.0, 'Predios 9-10 ha: máximo 6% de intersección con bosque'),
+    (10.0, 15.0, 5.0,'Predios 10-15 ha: máximo 5% de intersección con bosque'),
+    (15.0, 25.0, 3.0,'Predios 15-25 ha: máximo 3% de intersección con bosque'),
+    (25.0, 50.0, 2.0,'Predios 25-50 ha: máximo 2% de intersección con bosque'),
+    (50.0, NULL, 1.0,'Predios >50 ha: máximo 1% de intersección con bosque')
+) AS t(min_h, max_h, max_p, desc_txt) ON true
+WHERE l.layer_key = 'bosque_no_bosque';
+
+-- Umbrales comunes (SocioBosque, Zona Intangible, Zona Recarga Hídrica)
+INSERT INTO saf_validation_thresholds (layer_id, min_hectares, max_hectares, max_percentage, description)
+SELECT l.id, t.min_h, t.max_h, t.max_p, t.desc_txt
+FROM saf_validation_layers l
+JOIN (
+    VALUES
+    (0.0, 5.0, 10.0, 'Predios ≤5 ha: máximo 10% de intersección'),
+    (5.0, 10.0, 5.0, 'Predios 5-10 ha: máximo 5% de intersección'),
+    (10.0, NULL, 3.0, 'Predios >10 ha: máximo 3% de intersección')
+) AS t(min_h, max_h, max_p, desc_txt) ON true
+WHERE l.layer_key IN ('programa_sociobosque', 'zona_intangible', 'zona_recarga_hidrica');
+
+-- ===========================================
+-- DATOS INICIALES: config_parameters
+-- ===========================================
+INSERT INTO config_parameters (parameter_key, parameter_value, description, is_active)
+VALUES
+('predios_service_url', 'http://localhost:8080/servicio-soap-predios/PrediosService?wsdl', 'URL del servicio SOAP de predios de Agrocalidad', true),
+('predios_service_usuario', 'admin', 'Usuario del servicio externo de predios', true),
+('predios_service_clave', '1234', 'Clave del servicio externo de predios', true),
+('validation_types', 'BOSQUE_NO_BOSQUE,AREAS_CONSERVACION', 'Tipos de validación habilitados', true),
+('bosque_no_bosque_min_area_m2', '100', 'Área mínima en m² para evaluar la capa bosque_no_bosque', true),
+('areas_conservacion_min_area_m2', '100', 'Área mínima en m² para evaluar capas de áreas de conservación', true)
+ON CONFLICT (parameter_key) DO UPDATE SET
+    parameter_value = EXCLUDED.parameter_value,
+    description = EXCLUDED.description,
+    is_active = EXCLUDED.is_active,
+    updated_at = CURRENT_TIMESTAMP;
+
+COMMIT;
 
 -- ===========================================
 -- VERIFICACIÓN DE DATOS INSERTADOS
 -- ===========================================
-SELECT
-    'Capas activas:' as info,
-    COUNT(*) as total
+SELECT 'Capas activas' AS info, COUNT(*) AS total
 FROM saf_validation_layers
 WHERE active = true;
 
-SELECT
-    'Umbrales configurados:' as info,
-    COUNT(*) as total
+SELECT 'Umbrales configurados' AS info, COUNT(*) AS total
 FROM saf_validation_thresholds;
 
--- Mostrar configuración completa
+SELECT 'Parámetros de configuración' AS info, COUNT(*) AS total
+FROM config_parameters
+WHERE is_active = true;
+
 SELECT
-    vl.layer_display_name,
+    vl.layer_key,
+    vl.schema_name,
+    vl.table_name,
     vl.validation_type,
-    vt.min_hectares,
-    vt.max_hectares,
-    vt.max_percentage,
-    vt.description as threshold_description
+    COUNT(vt.id) AS num_umbrales
 FROM saf_validation_layers vl
-JOIN saf_validation_thresholds vt ON vl.id = vt.layer_id
+LEFT JOIN saf_validation_thresholds vt ON vl.id = vt.layer_id
 WHERE vl.active = true
-ORDER BY vl.layer_display_name, vt.min_hectares;
+GROUP BY vl.layer_key, vl.schema_name, vl.table_name, vl.validation_type
+ORDER BY vl.validation_type, vl.layer_key;

@@ -8,6 +8,10 @@ public class PredioVerification {
     private String predioOwnerCedula;  // Cédula del propietario
     private String predioOwnerName;    // Nombre/razón social del propietario
     private double predioAreaM2;
+    private double predioAreaHa;
+    private Double predioAreaReportedM2;
+    private Double predioAreaReportedHa;
+    private String areaConsistencyWarning;
     private int predioSRID;
     private String predioGeometryGeoJSON;
     private List<LayerResult> layersResults;
@@ -50,6 +54,38 @@ public class PredioVerification {
 
     public void setPredioAreaM2(double predioAreaM2) {
         this.predioAreaM2 = predioAreaM2;
+    }
+
+    public double getPredioAreaHa() {
+        return predioAreaHa;
+    }
+
+    public void setPredioAreaHa(double predioAreaHa) {
+        this.predioAreaHa = predioAreaHa;
+    }
+
+    public Double getPredioAreaReportedM2() {
+        return predioAreaReportedM2;
+    }
+
+    public void setPredioAreaReportedM2(Double predioAreaReportedM2) {
+        this.predioAreaReportedM2 = predioAreaReportedM2;
+    }
+
+    public Double getPredioAreaReportedHa() {
+        return predioAreaReportedHa;
+    }
+
+    public void setPredioAreaReportedHa(Double predioAreaReportedHa) {
+        this.predioAreaReportedHa = predioAreaReportedHa;
+    }
+
+    public String getAreaConsistencyWarning() {
+        return areaConsistencyWarning;
+    }
+
+    public void setAreaConsistencyWarning(String areaConsistencyWarning) {
+        this.areaConsistencyWarning = areaConsistencyWarning;
     }
 
     public int getPredioSRID() {

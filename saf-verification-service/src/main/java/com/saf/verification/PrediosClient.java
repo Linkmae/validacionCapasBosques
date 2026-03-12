@@ -76,7 +76,7 @@ public class PrediosClient {
             // Parsear respuesta
             return parseResponse(response);
 
-        } catch (Exception e) {
+        } catch (Throwable e) {
             System.err.println("ERROR en PrediosClient.getPredios: " + e.getMessage());
             e.printStackTrace();
             throw new RuntimeException("Error llamando servicio de predios: " + e.getMessage(), e);
@@ -160,7 +160,7 @@ public class PrediosClient {
             response.setPredios(predios);
             return response;
 
-        } catch (Exception e) {
+        } catch (Throwable e) {
             throw new RuntimeException("Error parseando respuesta del servicio de predios", e);
         }
     }

@@ -310,6 +310,7 @@ public class LayerValidationConfig {
         
         // 2. Calcular tamaño del predio en hectáreas
         double predioHectares = predioTotalAreaM2 / 10000.0;
+        double intersectionHectares = intersectionAreaM2 / 10000.0;
         
         // 3. Calcular porcentaje de intersección
         double percentage = (intersectionAreaM2 / predioTotalAreaM2) * 100.0;
@@ -326,6 +327,12 @@ public class LayerValidationConfig {
             
             boolean passes = percentage <= applicableThreshold.getMaxPercentage();
             String rangeDesc = formatThresholdRange(applicableThreshold);
+
+            logger.info(String.format(
+                "Validación por umbral (Ha) capa=%s: intersección=%.4f Ha, predio=%.4f Ha, porcentaje=%.2f%%, umbral=%.2f%%, rango=%s",
+                rule.getLayerName(), intersectionHectares, predioHectares, percentage,
+                applicableThreshold.getMaxPercentage(), rangeDesc
+            ));
             
             String message;
             if (passes) {
@@ -343,6 +350,11 @@ public class LayerValidationConfig {
             return new ValidationResult(passes, message, applicableThreshold.getMaxPercentage(), 
                                       percentage, rangeDesc);
         } else {
+            logger.info(String.format(
+                "Validación legacy (Ha) capa=%s: intersección=%.4f Ha, predio=%.4f Ha, porcentaje=%.2f%%, umbral fijo=%.2f%%",
+                rule.getLayerName(), intersectionHectares, predioHectares, percentage,
+                rule.getMaxIntersectionPercentage()
+            ));
             // LEGACY: Sistema de porcentaje fijo
             return validateLegacy(rule, percentage);
         }

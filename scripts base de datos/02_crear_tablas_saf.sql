@@ -65,28 +65,32 @@ COMMENT ON COLUMN saf_validation_thresholds.max_percentage IS 'Porcentaje máxim
 -- 3. TABLA: saf_request_logs
 -- ===========================================
 CREATE TABLE IF NOT EXISTS saf_request_logs (
-    id BIGSERIAL PRIMARY KEY,
-    request_id VARCHAR(50) UNIQUE,
-    identifier_type VARCHAR(50),
-    identifier_value VARCHAR(100),
-    verification_type VARCHAR(50),
-    status_code VARCHAR(10),
-    error_type VARCHAR(50),
-    status_message TEXT,
+    id SERIAL PRIMARY KEY,
+    identifier_type VARCHAR(50) NOT NULL,
+    identifier_value VARCHAR(100) NOT NULL,
+    request_status_code VARCHAR(10),
+    request_timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    response_status VARCHAR(50),
     total_predios INTEGER DEFAULT 0,
+    predios_con_interseccion INTEGER DEFAULT 0,
+    processing_time_ms INTEGER,
+    error_message TEXT,
+    request_id VARCHAR(100) UNIQUE,
+    verification_type VARCHAR(50),
+    error_type VARCHAR(50),
     predios_procesados INTEGER DEFAULT 0,
     predios_exitosos INTEGER DEFAULT 0,
     total_layers_checked INTEGER DEFAULT 0,
     layers_not_loaded INTEGER DEFAULT 0,
     layers_with_intersection INTEGER DEFAULT 0,
+    response_timestamp TIMESTAMP,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    response_timestamp TIMESTAMP
+    status_code VARCHAR(10)
 );
 
 -- Índices para saf_request_logs
-CREATE INDEX IF NOT EXISTS idx_request_logs_identifier ON saf_request_logs(identifier_value);
-CREATE INDEX IF NOT EXISTS idx_request_logs_timestamp ON saf_request_logs(created_at);
-CREATE INDEX IF NOT EXISTS idx_request_logs_status ON saf_request_logs(status_code);
+CREATE INDEX IF NOT EXISTS idx_request_logs_identifier ON saf_request_logs(identifier_type, identifier_value);
+CREATE INDEX IF NOT EXISTS idx_request_logs_timestamp ON saf_request_logs(request_timestamp);
 
 -- Comentarios
 COMMENT ON TABLE saf_request_logs IS 'Auditoría de solicitudes al servicio de verificación';
@@ -104,9 +108,9 @@ CREATE TABLE IF NOT EXISTS saf_error_logs (
 );
 
 -- Índices para saf_error_logs
-CREATE INDEX IF NOT EXISTS idx_error_logs_request_id ON saf_error_logs(request_id);
-CREATE INDEX IF NOT EXISTS idx_error_logs_error_type ON saf_error_logs(error_type);
-CREATE INDEX IF NOT EXISTS idx_error_logs_timestamp ON saf_error_logs(timestamp);
+CREATE INDEX IF NOT EXISTS idx_error_logs_request ON saf_error_logs(request_id);
+CREATE INDEX IF NOT EXISTS idx_error_logs_type ON saf_error_logs(error_type);
+CREATE INDEX IF NOT EXISTS idx_error_timestamp ON saf_error_logs(timestamp);
 
 -- Comentarios
 COMMENT ON TABLE saf_error_logs IS 'Registro de errores y excepciones del sistema';
@@ -116,29 +120,32 @@ COMMENT ON TABLE saf_error_logs IS 'Registro de errores y excepciones del sistem
 -- ===========================================
 CREATE TABLE IF NOT EXISTS saf_predio_logs (
     id BIGSERIAL PRIMARY KEY,
-    request_id VARCHAR(50) NOT NULL,
-    predio_id VARCHAR(100) NOT NULL,
-    predio_area_ha NUMERIC(10,2),
-    layer_key VARCHAR(100) NOT NULL,
-    intersection_area_m2 NUMERIC(15,2) DEFAULT 0,
-    intersection_percentage NUMERIC(5,2) DEFAULT 0,
-    validation_result VARCHAR(20) NOT NULL, -- APPROVED, REJECTED, WARNING
+    request_id VARCHAR(100) NOT NULL,
+    predio_id VARCHAR(100),
+    predio_codigo VARCHAR(100),
+    owner_cedula VARCHAR(50),
+    owner_name VARCHAR(255),
+    predio_area_m2 DOUBLE PRECISION,
+    layer_name VARCHAR(255),
+    layer_table_name VARCHAR(255),
+    layer_not_loaded BOOLEAN DEFAULT FALSE,
+    intersects BOOLEAN DEFAULT FALSE,
+    intersection_area_m2 DOUBLE PRECISION DEFAULT 0,
+    intersection_percentage DOUBLE PRECISION DEFAULT 0,
+    validation_passed BOOLEAN,
     validation_message TEXT,
-    threshold_applied_id INTEGER REFERENCES saf_validation_thresholds(id),
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
 -- Índices para saf_predio_logs
-CREATE INDEX IF NOT EXISTS idx_predio_logs_request_id ON saf_predio_logs(request_id);
-CREATE INDEX IF NOT EXISTS idx_predio_logs_predio_id ON saf_predio_logs(predio_id);
-CREATE INDEX IF NOT EXISTS idx_predio_logs_layer ON saf_predio_logs(layer_key);
-CREATE INDEX IF NOT EXISTS idx_predio_logs_result ON saf_predio_logs(validation_result);
+CREATE INDEX IF NOT EXISTS idx_predio_logs_request ON saf_predio_logs(request_id);
+CREATE INDEX IF NOT EXISTS idx_predio_logs_owner ON saf_predio_logs(owner_cedula);
 
 -- Comentarios
 COMMENT ON TABLE saf_predio_logs IS 'Detalle de validación para cada predio individual';
 
 -- ===========================================
--- 6. TABLA: config_parameters (opcional)
+-- 6. TABLA: config_parameters
 -- ===========================================
 CREATE TABLE IF NOT EXISTS config_parameters (
     id SERIAL PRIMARY KEY,
@@ -153,10 +160,12 @@ CREATE TABLE IF NOT EXISTS config_parameters (
 -- Insertar configuración por defecto
 INSERT INTO config_parameters (parameter_key, parameter_value, description, is_active)
 VALUES
-('predios_service_url', 'http://localhost:8080/saf-predios-service/PrediosService?wsdl', 'URL del servicio SOAP de predios', true),
-('predios_service_namespace', 'http://saf.com/predios', 'Namespace del servicio de predios', true),
-('verification_timeout_seconds', '30', 'Timeout para llamadas de verificación en segundos', true),
-('max_retry_attempts', '3', 'Número máximo de reintentos para llamadas externas', true)
+('predios_service_url', 'http://localhost:8080/servicio-soap-predios/PrediosService?wsdl', 'URL del servicio SOAP de predios de Agrocalidad', true),
+('predios_service_usuario', 'admin', 'Usuario del servicio externo de predios', true),
+('predios_service_clave', '1234', 'Clave del servicio externo de predios', true),
+('validation_types', 'BOSQUE_NO_BOSQUE,AREAS_CONSERVACION', 'Tipos de validación habilitados', true),
+('bosque_no_bosque_min_area_m2', '100', 'Área mínima en m² para evaluar la capa bosque_no_bosque', true),
+('areas_conservacion_min_area_m2', '100', 'Área mínima en m² para evaluar capas de áreas de conservación', true)
 ON CONFLICT (parameter_key) DO NOTHING;
 
 -- Comentarios

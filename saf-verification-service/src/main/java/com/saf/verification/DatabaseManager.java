@@ -1,13 +1,17 @@
 package com.saf.verification;
 
-import javax.annotation.Resource;
 import javax.sql.DataSource;
 import java.sql.Connection;
+import java.sql.DatabaseMetaData;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.logging.Logger;
 
 /**
@@ -27,7 +31,6 @@ public class DatabaseManager {
 
     public void logRequest(VerifyPrediosByIdentifierRequest request, VerifyPrediosByIdentifierResponse response) {
         Connection conn = null;
-        PreparedStatement stmt = null;
         try {
             conn = logsDS.getConnection();
             
@@ -49,29 +52,15 @@ public class DatabaseManager {
                 }
             }
             
-            String sql = "INSERT INTO saf_request_logs " +
-                        "(request_id, identifier_type, identifier_value, verification_type, " +
-                        "status_code, error_type, status_message, total_predios, " +
-                        "predios_procesados, predios_exitosos, total_layers_checked, " +
-                        "layers_not_loaded, layers_with_intersection, response_timestamp) " +
-                        "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())";
-            
-            stmt = conn.prepareStatement(sql);
-            stmt.setString(1, response.getIdentifierEcho());
-            stmt.setString(2, request.getIdentifierType());
-            stmt.setString(3, request.getIdentifierValue());
-            stmt.setString(4, request.getVerificationType());
-            stmt.setString(5, response.getRequestStatus().getCode());
-            stmt.setString(6, response.getRequestStatus().getErrorType());
-            stmt.setString(7, response.getRequestStatus().getMessage());
-            stmt.setInt(8, totalPredios);
-            stmt.setInt(9, totalPredios);
-            stmt.setInt(10, totalPredios);
-            stmt.setInt(11, totalLayers);
-            stmt.setInt(12, layersNotLoaded);
-            stmt.setInt(13, layersWithIntersection);
-            
-            stmt.executeUpdate();
+            insertRequestLogAdaptive(
+                conn,
+                request,
+                response,
+                totalPredios,
+                totalLayers,
+                layersNotLoaded,
+                layersWithIntersection
+            );
             
             log.info("Request logged: " + response.getIdentifierEcho() + 
                     " - Predios: " + totalPredios + ", Layers: " + totalLayers);
@@ -80,9 +69,101 @@ public class DatabaseManager {
             log.severe("ERROR: No se pudo guardar log de request - " + e.getMessage());
             // No lanzar excepción para no interrumpir el flujo
         } finally {
-            closeQuietly(stmt);
             closeQuietly(conn);
         }
+    }
+
+    private void insertRequestLogAdaptive(Connection conn,
+                                          VerifyPrediosByIdentifierRequest request,
+                                          VerifyPrediosByIdentifierResponse response,
+                                          int totalPredios,
+                                          int totalLayers,
+                                          int layersNotLoaded,
+                                          int layersWithIntersection) throws SQLException {
+        Set<String> columns = getTableColumns(conn, "saf_request_logs");
+
+        List<String> insertColumns = new ArrayList<>();
+        List<String> valueTokens = new ArrayList<>();
+        List<Object> params = new ArrayList<>();
+
+        RequestStatus status = response.getRequestStatus();
+        // request_id debe ser único por cada llamada; usar timestamp + hilo para garantizarlo
+        String requestId = "REQ-" + System.currentTimeMillis() + "-" + Thread.currentThread().getId();
+
+        addColumnValue(columns, insertColumns, valueTokens, params, "request_id", requestId);
+        addColumnValue(columns, insertColumns, valueTokens, params, "identifier_type", request.getIdentifierType());
+        addColumnValue(columns, insertColumns, valueTokens, params, "identifier_value", request.getIdentifierValue());
+        addColumnValue(columns, insertColumns, valueTokens, params, "verification_type", request.getVerificationType());
+
+        // Campos de estado (esquema nuevo y legacy)
+        addColumnValue(columns, insertColumns, valueTokens, params, "status_code", status != null ? status.getCode() : null);
+        addColumnValue(columns, insertColumns, valueTokens, params, "request_status_code", status != null ? status.getCode() : null);
+        addColumnValue(columns, insertColumns, valueTokens, params, "error_type", status != null ? status.getErrorType() : null);
+        addColumnValue(columns, insertColumns, valueTokens, params, "response_status", status != null ? status.getErrorType() : null);
+        addColumnValue(columns, insertColumns, valueTokens, params, "status_message", status != null ? status.getMessage() : null);
+        addColumnValue(columns, insertColumns, valueTokens, params, "error_message", status != null ? status.getMessage() : null);
+
+        // Métricas (esquema nuevo y legacy)
+        addColumnValue(columns, insertColumns, valueTokens, params, "total_predios", totalPredios);
+        addColumnValue(columns, insertColumns, valueTokens, params, "predios_procesados", totalPredios);
+        addColumnValue(columns, insertColumns, valueTokens, params, "predios_exitosos", totalPredios);
+        addColumnValue(columns, insertColumns, valueTokens, params, "total_layers_checked", totalLayers);
+        addColumnValue(columns, insertColumns, valueTokens, params, "layers_not_loaded", layersNotLoaded);
+        addColumnValue(columns, insertColumns, valueTokens, params, "layers_with_intersection", layersWithIntersection);
+        addColumnValue(columns, insertColumns, valueTokens, params, "predios_con_interseccion", layersWithIntersection);
+
+        // Timestamp de respuesta solo si existe la columna
+        if (columns.contains("response_timestamp")) {
+            insertColumns.add("response_timestamp");
+            valueTokens.add("NOW()");
+        }
+
+        if (insertColumns.isEmpty()) {
+            throw new SQLException("No hay columnas compatibles en saf_request_logs para insertar.");
+        }
+
+        String sql = "INSERT INTO saf_request_logs (" + String.join(", ", insertColumns) + ") " +
+                     "VALUES (" + String.join(", ", valueTokens) + ")";
+
+        PreparedStatement stmt = null;
+        try {
+            stmt = conn.prepareStatement(sql);
+            for (int i = 0; i < params.size(); i++) {
+                stmt.setObject(i + 1, params.get(i));
+            }
+            stmt.executeUpdate();
+        } finally {
+            closeQuietly(stmt);
+        }
+    }
+
+    private void addColumnValue(Set<String> existingColumns,
+                                List<String> insertColumns,
+                                List<String> valueTokens,
+                                List<Object> params,
+                                String column,
+                                Object value) {
+        if (!existingColumns.contains(column)) {
+            return;
+        }
+        insertColumns.add(column);
+        valueTokens.add("?");
+        params.add(value);
+    }
+
+    private Set<String> getTableColumns(Connection conn, String tableName) throws SQLException {
+        Set<String> columns = new HashSet<>();
+        DatabaseMetaData metaData = conn.getMetaData();
+        ResultSet rs = null;
+        try {
+            rs = metaData.getColumns(null, null, tableName, null);
+            while (rs.next()) {
+                columns.add(rs.getString("COLUMN_NAME").toLowerCase());
+            }
+        } finally {
+            closeQuietly(rs);
+        }
+        return columns;
     }
 
     public void logPredioDetails(String requestId, PredioVerification predio) {
@@ -215,9 +296,9 @@ public class DatabaseManager {
             "ST_Area(ST_Transform(intersection_geom, 4326)::geography) AS area_m2, " +
             "ST_AsGeoJSON(ST_Transform(intersection_geom, 4326)) AS geojson " +
             "FROM ( " +
-            "    SELECT ST_Union(ST_Intersection(ST_GeomFromText(?, 4326), geom)) AS intersection_geom " +
+            "    SELECT ST_Union(ST_Intersection(ST_Transform(ST_GeomFromText(?, 4326), ST_SRID(geom)), geom)) AS intersection_geom " +
             "    FROM " + capaSchemaTabla + " " +
-            "    WHERE ST_Intersects(ST_GeomFromText(?, 4326), geom) " +
+            "    WHERE ST_Intersects(ST_Transform(ST_GeomFromText(?, 4326), ST_SRID(geom)), geom) " +
             ") AS subquery " +
             "WHERE intersection_geom IS NOT NULL";
 

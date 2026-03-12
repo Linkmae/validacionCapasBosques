@@ -1,0 +1,160 @@
+<!-- ===================================================================
+     EJEMPLOS DE USO DEL SERVICIO DE VERIFICACIÓN
+     Fecha: 2026-03-11
+     
+     El servicio ahora soporta DOS MODOS de operación:
+     1. MODO EXTERNO: Consulta predios por identificador (comportamiento original)
+     2. MODO DIRECTO: Recibe información de predios directamente
+     ================================================================ -->
+
+<!-- ===================================================================
+     MODO 1: EXTERNO - Consultar predios por identificador (ORIGINAL)
+     ================================================================ -->
+<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" 
+                  xmlns:ver="http://saf.com/verification">
+   <soapenv:Header/>
+   <soapenv:Body>
+      <ver:verifyPrediosByIdentifier>
+         <request>
+            <identifierType>CEDULA</identifierType>
+            <identifierValue>1234567890</identifierValue>
+            <verificationType>AREAS_CONSERVACION</verificationType>
+            <includeIntersectionGeoJSON>false</includeIntersectionGeoJSON>
+            <!-- prediosData se omite o viene null -->
+         </request>
+      </ver:verifyPrediosByIdentifier>
+   </soapenv:Body>
+</soapenv:Envelope>
+
+
+<!-- ===================================================================
+     MODO 2: DIRECTO - Proporcionar información de predios directamente
+     ================================================================ -->
+<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" 
+                  xmlns:ver="http://saf.com/verification">
+   <soapenv:Header/>
+   <soapenv:Body>
+      <ver:verifyPrediosByIdentifier>
+         <request>
+            <!-- Campos opcionales cuando se usa prediosData -->
+            <identifierType>CEDULA</identifierType>
+            <identifierValue>1234567890</identifierValue>
+            <verificationType>AREAS_CONSERVACION</verificationType>
+            <includeIntersectionGeoJSON>false</includeIntersectionGeoJSON>
+            
+            <!-- ===== INFORMACIÓN DIRECTA DE PREDIOS ===== -->
+            <prediosData>
+               <!-- Predio 1 - Información completa -->
+               <PredioInfo>
+                  <predioId>PREDIO-001</predioId>
+                  <predioCodigo>12-34-567-890</predioCodigo>
+                  <geometryWKT>POLYGON((-78.5 -0.5, -78.5 -0.51, -78.49 -0.51, -78.49 -0.5, -78.5 -0.5))</geometryWKT>
+                  <areaM2>1255000</areaM2>
+                  <ownerIdentifier>1234567890</ownerIdentifier>
+                  <ownerName>Juan Pérez García</ownerName>
+                  <provincia>PICHINCHA</provincia>
+                  <canton>QUITO</canton>
+                  <parroquia>TUMBACO</parroquia>
+                  <srid>4326</srid>
+               </PredioInfo>
+               
+               <!-- Predio 2 - Información mínima (solo ID y geometría) -->
+               <!-- El área se calculará automáticamente -->
+               <PredioInfo>
+                  <predioId>PREDIO-002</predioId>
+                  <geometryWKT>POLYGON((-78.6 -0.6, -78.6 -0.61, -78.59 -0.61, -78.59 -0.6, -78.6 -0.6))</geometryWKT>
+               </PredioInfo>
+               
+               <!-- Predio 3 - Con área especificada -->
+               <PredioInfo>
+                  <predioId>PREDIO-003</predioId>
+                  <geometryWKT>POLYGON((-78.7 -0.7, -78.7 -0.71, -78.69 -0.71, -78.69 -0.7, -78.7 -0.7))</geometryWKT>
+                  <areaM2>500000</areaM2>
+                  <provincia>PICHINCHA</provincia>
+               </PredioInfo>
+            </prediosData>
+         </request>
+      </ver:verifyPrediosByIdentifier>
+   </soapenv:Body>
+</soapenv:Envelope>
+
+
+<!-- ===================================================================
+     MODO DIRECTO - Ejemplo con un solo predio
+     ================================================================ -->
+<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" 
+                  xmlns:ver="http://saf.com/verification">
+   <soapenv:Header/>
+   <soapenv:Body>
+      <ver:verifyPrediosByIdentifier>
+         <request>
+            <verificationType>BOSQUE_NO_BOSQUE</verificationType>
+            <includeIntersectionGeoJSON>true</includeIntersectionGeoJSON>
+            
+            <prediosData>
+               <PredioInfo>
+                  <predioId>PREDIO-UNICO-001</predioId>
+                  <geometryWKT>POLYGON((-78.5 -0.5, -78.5 -0.51, -78.49 -0.51, -78.49 -0.5, -78.5 -0.5))</geometryWKT>
+                  <areaM2>1000000</areaM2>
+               </PredioInfo>
+            </prediosData>
+         </request>
+      </ver:verifyPrediosByIdentifier>
+   </soapenv:Body>
+</soapenv:Envelope>
+
+
+<!-- ===================================================================
+     NOTAS IMPORTANTES:
+     ================================================================ 
+     
+     1. MODO DE OPERACIÓN:
+        - Si prediosData viene NULL o VACÍO → Usa MODO EXTERNO (consulta servicio)
+        - Si prediosData tiene datos → Usa MODO DIRECTO (no consulta servicio)
+     
+     2. CAMPOS REQUERIDOS en PredioInfo:
+        - predioId: OBLIGATORIO - Identificador único del predio
+        - geometryWKT: OBLIGATORIO - Geometría en formato WKT (EPSG:4326)
+     
+     3. CAMPOS OPCIONALES en PredioInfo:
+        - areaM2: Área en metros cuadrados (se calcula si no viene)
+        - predioCodigo: Código catastral
+        - ownerIdentifier: Cédula/RUC del propietario
+        - ownerName: Nombre del propietario
+        - provincia: Nombre de la provincia
+        - canton: Nombre del cantón
+        - parroquia: Nombre de la parroquia
+        - srid: Sistema de referencia (default: 4326 - WGS84)
+     
+     4. FORMATO WKT:
+        - Debe estar en coordenadas geográficas (latitud, longitud)
+        - EPSG:4326 (WGS84)
+        - Ejemplos válidos:
+          * POINT(-78.5 -0.5)
+          * POLYGON((-78.5 -0.5, -78.5 -0.51, -78.49 -0.51, -78.49 -0.5, -78.5 -0.5))
+          * MULTIPOLYGON(((...)))
+     
+     5. CÁLCULO DE ÁREA:
+        - Si no se proporciona areaM2, se calcula automáticamente usando PostGIS
+        - El cálculo usa ST_Area con geography para mayor precisión
+        - El área siempre se trabaja en metros cuadrados (m²)
+     
+     6. VALIDACIONES:
+        - verificationType soporta: BOSQUE_NO_BOSQUE, AREAS_CONSERVACION
+        - Si viene layersToCheck, solo valida esas capas específicas
+        - includeIntersectionGeoJSON=true devuelve las geometrías de intersección
+     
+     7. VENTAJAS DEL MODO DIRECTO:
+        - No requiere que el predio esté registrado en el sistema externo
+        - Más rápido (sin llamada a servicio externo)
+        - Útil para validaciones previas antes de registrar predios
+        - Permite validar geometrías "en el aire"
+     
+     8. CASOS DE USO:
+        - MODO EXTERNO: Validación de predios ya registrados por cédula/RUC
+        - MODO DIRECTO: 
+          * Pre-validación antes de registro
+          * Validación de lotes nuevos
+          * Integración con sistemas GIS externos
+          * Validación masiva con geometrías conocidas
+-->
